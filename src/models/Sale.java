@@ -11,7 +11,7 @@ import exception.InvalidPrimaryKeyException;
 import database.*;
 import impresario.IView;
 import userinterface.MainStageContainer;
-import views.AddScoutView;
+
 import views.View;
 import views.ViewFactory;
 import javafx.*;
@@ -19,41 +19,42 @@ import model.EntityBase;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Session extends EntityBase implements IView {
+public class Sale extends EntityBase implements IView {
 
-	private static final String myTableName = "Session";
+	private static final String myTableName = "Transaction";
 	protected Properties dependencies;
 	private String updateStatusMessage = "";
-	// protected Stage myStage; Don't need stage
-
-	protected TreeLotCoordinator myTLC; // Pretty Sure I don't need this
 
 	// ----------------------------------------------------------
-	// Constructor for Session from database
+	// Constructor for trans from database
 	// ------------------------------------------------------
-	public Session(String sessionID) throws InvalidPrimaryKeyException {
+	public Sale(String transID) throws InvalidPrimaryKeyException {
 		super(myTableName);
 
-		String query = "SELECT * FROM " + myTableName + " WHERE (sessionID = " + sessionID + ")";
+		String query = "SELECT * FROM " + myTableName + " WHERE (transID = "
+				+ transID + ")";
 
 		Vector allDataRetrieved = getSelectQueryResult(query);
 
-		// You must get one session at least
+		// You must get one trans at least
 		if (allDataRetrieved != null) {
 			int size = allDataRetrieved.size();
 
-			// There should be EXACTLY one session. More than that is an error
+			// There should be EXACTLY one trans. More than that is an error
 			if (size != 1) {
-				throw new InvalidPrimaryKeyException("Multiple sessions matching id : " + sessionID + " found.");
+				throw new InvalidPrimaryKeyException(
+						"Multiple transs matching id : " + transID + " found.");
 			} else {
 				// copy all the retrieved data into persistent state
-				Properties retrievedAccountData = (Properties) allDataRetrieved.elementAt(0);
+				Properties retrievedAccountData = (Properties) allDataRetrieved
+						.elementAt(0);
 				persistentState = new Properties();
 
 				Enumeration allKeys = retrievedAccountData.propertyNames();
 				while (allKeys.hasMoreElements() == true) {
 					String nextKey = (String) allKeys.nextElement();
-					String nextValue = retrievedAccountData.getProperty(nextKey);
+					String nextValue = retrievedAccountData
+							.getProperty(nextKey);
 
 					if (nextValue != null) {
 						persistentState.setProperty(nextKey, nextValue);
@@ -62,30 +63,22 @@ public class Session extends EntityBase implements IView {
 
 			}
 		}
-		// If no session found for this user name, throw an exception
+		// If no trans found for this user name, throw an exception
 		else {
-			throw new InvalidPrimaryKeyException("No session matching id : " + sessionID + " found.");
+			throw new InvalidPrimaryKeyException("No trans matching id : "
+					+ transID + " found.");
 		}
 	}
 
 	// ------------------------------------------------------
-	// Constructor taking a new session
+	// Constructor taking a new trans
 	// ------------------------------------------------------
-	public Session(Properties props) {
+	public Sale(Properties props) {
 		super(myTableName);
 		setDependencies();
 		setData(props);
 	}
 
-	// ------------------------------------------------------
-	// Constructor used to see if there's an open Session 
-	// ------------------------------------------------------
-	public Session() {
-		super(myTableName);
-		setDependencies();
-		}
-	
-	
 	// ------------------------------------------------------
 	private void setDependencies() {
 		dependencies = new Properties();
@@ -98,24 +91,15 @@ public class Session extends EntityBase implements IView {
 		while (allKeys.hasMoreElements() == true) {
 			String nextKey = (String) allKeys.nextElement();
 			String nextValue = props.getProperty(nextKey);
+
 			if (nextValue != null) {
 				persistentState.setProperty(nextKey, nextValue);
 			}
 		}
 	}
-
-	// ------------------------------------------------------
-	public void insertNewSession()
-	{		
-		try 
-		{
-			Integer i = insertAutoIncrementalPersistentState(mySchema, persistentState);	
-			System.out.println(i + " is the primary key of the new Book");
-		}
-		catch (SQLException e) {
-			System.out.println("Error inserting new Book into the database" + e.toString());
-		}
-	}
+	
+	
+	
 	
 	// ------------------------------------------------------
 	public Object getState(String key) {
@@ -136,7 +120,7 @@ public class Session extends EntityBase implements IView {
 
 	// ------------------------------------------------------
 	public void stateChangeRequest(String key, Object value) {
-
+		
 		myRegistry.updateSubscribers(key, this);
 	}
 
@@ -144,47 +128,34 @@ public class Session extends EntityBase implements IView {
 	public void updateState(String key, Object value) {
 		stateChangeRequest(key, value);
 	}
+	
 
 	// ------------------------------------------------------
 	public void updateStateInDatabase() {
 
-		
 		try {
-			if (persistentState.getProperty("sessionID") != null) {
+			if (persistentState.getProperty("transID") != null) {
 				Properties whereClause = new Properties();
-				whereClause.setProperty("sessionID", persistentState.getProperty("sessionID"));
+				whereClause.setProperty("transID",
+						persistentState.getProperty("transID"));
 				updatePersistentState(mySchema, persistentState, whereClause);
-				updateStatusMessage = "session data for sessionID : " + persistentState.getProperty("sessionID")
+				updateStatusMessage = "trans data for transID : "
+						+ persistentState.getProperty("transID")
 						+ " updated successfully in database!";
 				System.out.println(updateStatusMessage);
 			} else {
+
+				Integer transID = insertAutoIncrementalPersistentState(mySchema, persistentState);
 				
-				Integer sessionID = insertAutoIncrementalPersistentState(mySchema, persistentState);
-				System.out.println("I got here");
-				persistentState.setProperty("sessionID", "" + sessionID.intValue());
-				updateStatusMessage = "session data for new session : " + persistentState.getProperty("sessionID")
+				persistentState.setProperty("barcode", "" + transID.intValue());
+				updateStatusMessage = "trans data for new trans : "
+						+ persistentState.getProperty("transID")
 						+ " installed successfully in database!";
 				System.out.println(updateStatusMessage);
 
 			}
 		} catch (SQLException ex) {
-			updateStatusMessage = "Error in installing session data in database!";
-		}
-	}
-
-	// ------------------------------------------------------
-	public boolean isOpenSession() throws InvalidPrimaryKeyException {
-
-		String query = "SELECT * FROM " + myTableName + " WHERE (endTime IS NULL)";
-
-		Vector allDataRetrieved = getSelectQueryResult(query);
-		int size = allDataRetrieved.size();
-		
-		if (size > 0) {
-			return true;
-		}	
-		else {
-			return false;
+			updateStatusMessage = "Error in installing transaction data in database!";
 		}
 	}
 
@@ -196,22 +167,25 @@ public class Session extends EntityBase implements IView {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
+		
 	}
 
 	// ------------------------------------------------------
 	public Vector<String> getEntryListView() {
 		Vector<String> v = new Vector<String>();
 
+		v.addElement(persistentState.getProperty("transID"));
 		v.addElement(persistentState.getProperty("sessionID"));
-		v.addElement(persistentState.getProperty("startDate"));
-		v.addElement(persistentState.getProperty("startTime"));
-		v.addElement(persistentState.getProperty("endTime"));
-		v.addElement(persistentState.getProperty("startingCash"));
-		v.addElement(persistentState.getProperty("endingCash"));
-		v.addElement(persistentState.getProperty("totalCheckTrans"));
-		v.addElement(persistentState.getProperty("notes"));
-
+		v.addElement(persistentState.getProperty("transactionType"));
+		v.addElement(persistentState.getProperty("barcode"));
+		v.addElement(persistentState.getProperty("transactionAmount"));
+		v.addElement(persistentState.getProperty("paymentMethod"));
+		v.addElement(persistentState.getProperty("customerName"));
+		v.addElement(persistentState.getProperty("customerPhone"));
+		v.addElement(persistentState.getProperty("customerEmail"));
+		v.addElement(persistentState.getProperty("transactionDate"));
+		v.addElement(persistentState.getProperty("transactionTime"));
+		v.addElement(persistentState.getProperty("dateStatusUpdated"));
 		return v;
 	}
 
@@ -220,10 +194,18 @@ public class Session extends EntityBase implements IView {
 	// ----------------------------------------------------------
 	public String toString() {
 
-		String s = "sessionID: " + persistentState.getProperty("sessionID") + " \nstartDate: " + persistentState.getProperty("startDate") + " \nstartTime:"
-				+ persistentState.getProperty("startTime") + " \nendTime: " + persistentState.getProperty("endTime") + " \nstartingCash: "
-				+ persistentState.getProperty("startingCash") + " \nendingCash: " + persistentState.getProperty("endingCash")
-				+ " \ntotalChecks: " + persistentState.getProperty("totalCheckTrans") + " \nnotes: " + persistentState.getProperty("notes");
+		String s = persistentState.getProperty("transID") + " \n"
+				+ persistentState.getProperty("sessionID") + " \n"
+				+ persistentState.getProperty("transactionType") + " \n"
+				+ persistentState.getProperty("barcode") + " \n"
+				+ persistentState.getProperty("transactionAmount") + " \n"
+				+ persistentState.getProperty("paymentMethod") + " \n"
+				+ persistentState.getProperty("customerName") + " \n"
+				+ persistentState.getProperty("customerPhone") + " \n"
+				+ persistentState.getProperty("customerEmail") + " \n"
+				+ persistentState.getProperty("transactionDate") + " \n"
+				+ persistentState.getProperty("transactionTime") + " \n"
+				+ persistentState.getProperty("dateStatusUpdated");
 		return s;
 	}
 }

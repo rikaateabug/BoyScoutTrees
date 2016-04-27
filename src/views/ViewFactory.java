@@ -72,6 +72,16 @@ public class ViewFactory {
 			return new TreeTypeCollectionView(model);
 		}
 		
+		else if (viewName.equals("OpenSessionView") == true)
+		{
+			return new OpenSessionView(model);
+		}
+		
+		else if (viewName.equals("ScoutShiftView") == true)
+		{
+			return new ScoutShiftView(model);
+		}
+		
 		else
 			return null;
 	}

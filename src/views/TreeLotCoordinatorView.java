@@ -74,7 +74,7 @@ public class TreeLotCoordinatorView extends View {
 		//Change below if desired
 		Text titleText = new Text(title);
 		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 25));
-		titleText.setWrappingWidth(300);
+		titleText.setWrappingWidth(300);	//Change this to 500 when you change the previous line to 50
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		container.getChildren().add(titleText);
@@ -131,6 +131,10 @@ public class TreeLotCoordinatorView extends View {
 			myModel.stateChangeRequest("UpdateTreeType", null);
 		});
 		
+		openShift.setOnAction(e -> {
+			myModel.stateChangeRequest("OpenSession", null);
+		});
+		
 		/**
 		 * Action Events for Sell Tree, Open Shift & Close Shift
 		 * We don't need these yet
@@ -138,9 +142,7 @@ public class TreeLotCoordinatorView extends View {
 			myModel.stateChangeRequest("SellTree", null);
 		});
 		
-		openShift.setOnAction(e -> {
-			myModel.stateChangeRequest("OpenShift", null);
-		});
+		
 		
 		closeShift.setOnAction(e -> {
 			myModel.stateChangeRequest("CloseShift", null);
@@ -195,9 +197,14 @@ public class TreeLotCoordinatorView extends View {
 		other.setPadding(new Insets(0, 10, 10, 10));
 		other.getChildren().add(otherActions);
 		
+		Text sessionText = new Text(getSessionStatus());
+		sessionText.setFont(Font.font("Arial", FontWeight.MEDIUM, 15));
+		
+		
 		//Add all layouts to the form container
 		topRow.getChildren().addAll(sellTree, openShift, closeShift);
-		topSection.getChildren().addAll(commonActions, topRow);
+		topSection.getChildren().addAll(commonActions, topRow, sessionText);
+		//topSection.getChildren().addAll(commonActions, topRow);
 		formContainer.getChildren().addAll(topSection, other);
 		
 		formContainer.getChildren().add(accordion);
@@ -209,5 +216,19 @@ public class TreeLotCoordinatorView extends View {
 	public void updateState(String arg0, Object arg1) {
 		// TODO Auto-generated method stub
 	}
+	
+	//----------------------------------------------------------
+	public String getSessionStatus() {
+		boolean status;
+		status = (boolean) myModel.getState("SessionStatus");
+		
+		if (status == true) {
+			return "Shift open";
+		}
+		else {
+			return "There are currently no open shifts";
+		}
+	}
+	
 	
 }

@@ -29,26 +29,30 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import models.MainStageContainer;
 import models.Scout;
 import models.ScoutCollection;
 import transactions.ScoutTransaction;
+import transactions.Transaction;
 import userinterface.MessageView;
 import views.View;
 
 public class ScoutCollectionView extends View {
 
 	protected final String scoutsFound = new String(myResourceBundle.getString("scoutsFound"));
+	protected final String scoutsFoundSession = new String(myResourceBundle.getString("scoutsFoundSession"));
 	protected final String scoutIDLabel = new String(myResourceBundle.getString("scoutIDLabel"));
 	protected final String dateLastUpdatedLabel = new String(myResourceBundle.getString("dateLastUpdatedLabel"));
 	protected final String titleLabel = new String(myResourceBundle.getString("titleLabel"));
 	protected final String lastNameLabel = new String(myResourceBundle.getString("lastNameLabel"));
-	protected final String firstNameLabel = new String(myResourceBundle.getString("firstNameLabel")); 
+	protected final String firstNameLabel = new String(myResourceBundle.getString("firstNameLabel"));
 	protected final String middleNameLabel = new String(myResourceBundle.getString("middleNameLabel"));
 	protected final String dateOfBirthLabel = new String(myResourceBundle.getString("dateOfBirthLabel"));
 	protected final String phoneNumberLabel = new String(myResourceBundle.getString("phoneNumberLabel"));
@@ -58,30 +62,35 @@ public class ScoutCollectionView extends View {
 	protected final String cancelButtonLabel = new String(myResourceBundle.getString("cancelButtonLabel"));
 	protected final String submitButtonLabel = new String(myResourceBundle.getString("submitButtonLabel"));
 	protected final String selectionErrorMessage = new String(myResourceBundle.getString("selectionErrorMessage"));
-	
+
 	protected TableView<ScoutTableModel> tableOfScouts;
 	protected Button cancelButton;
 	protected Button submitButton;
-	
-	private ScoutTransaction myScoutTransaction;
-	
-	protected MessageView statusLog;
 
+	// private ScoutTransaction myScoutTransaction;
+
+	protected MessageView statusLog;
+	private String transType;
+	
 	// --------------------------------------------------------------------------
-	public ScoutCollectionView(ScoutCollection scoutTrans) {
-		super(scoutTrans, "ScoutCollectionView");
-		myModel = scoutTrans;
-		
+	public ScoutCollectionView(ScoutCollection scoutCol) {
+		super(scoutCol, "ScoutCollectionView");
+		myModel = scoutCol;
+		transType = (String) myModel.getState("TransactionType");
 		// create a container for showing the contents
 		VBox container = new VBox(10);
 		container.setPadding(new Insets(15, 5, 5, 5));
 
 		// create our GUI components, add them to this panel
 		container.getChildren().add(createTitle());
-		container.getChildren().add(createFormContent());
-
+		
+		if (transType.equals("ScoutTransaction")) {
+			container.getChildren().add(createFormContent());
+		} else if (transType.equals("SessionTransaction")) {
+			container.getChildren().add(createFormContentSession());
+		}
 		// Error message area
-		container.getChildren().add(createStatusLog("                                            "));
+		// container.getChildren().add(createStatusLog(" "));
 
 		getChildren().add(container);
 
@@ -100,9 +109,9 @@ public class ScoutCollectionView extends View {
 		ObservableList<ScoutTableModel> tableData = FXCollections.observableArrayList();
 		try {
 			ScoutCollection b1 = (ScoutCollection) myModel.getState("ScoutList");
-			
+
 			Vector entryList = (Vector) b1.getState("Scouts");
-			
+
 			Enumeration entries = entryList.elements();
 
 			while (entries.hasMoreElements() == true) {
@@ -139,6 +148,8 @@ public class ScoutCollectionView extends View {
 		return container;
 	}
 
+	
+	
 	// Create the main form content
 	// -------------------------------------------------------------
 	private VBox createFormContent() {
@@ -158,85 +169,177 @@ public class ScoutCollectionView extends View {
 
 		tableOfScouts = new TableView<ScoutTableModel>();
 		tableOfScouts.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+		Text placeholder = new Text("\t\tNO SCOUTS FOUND");
+		VBox test = new VBox();
+		test.setAlignment(Pos.TOP_LEFT);
+		test.getChildren().add(placeholder);
+		placeholder.setTextAlignment(TextAlignment.CENTER);
+		tableOfScouts.setPlaceholder(test);
 
-		
 		TableColumn scoutIDCol = new TableColumn(scoutIDLabel);
-		scoutIDCol.setMinWidth(100);
+		scoutIDCol.setMinWidth(50);
+		scoutIDCol.setStyle("-fx-alignment: CENTER;");
 		scoutIDCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("scoutID"));
 
 		TableColumn lastNameCol = new TableColumn(lastNameLabel);
 		lastNameCol.setMinWidth(100);
+		lastNameCol.setStyle("-fx-alignment: CENTER;");
 		lastNameCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("lastName"));
 
 		TableColumn firstNameCol = new TableColumn(firstNameLabel);
 		firstNameCol.setMinWidth(100);
+		firstNameCol.setStyle("-fx-alignment: CENTER;");
 		firstNameCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("firstName"));
 
 		TableColumn middleNameCol = new TableColumn(middleNameLabel);
 		middleNameCol.setMinWidth(100);
+		middleNameCol.setStyle("-fx-alignment: CENTER;");
 		middleNameCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("middleName"));
 
 		TableColumn dobCol = new TableColumn(dateOfBirthLabel);
 		dobCol.setMinWidth(100);
+		dobCol.setStyle("-fx-alignment: CENTER;");
 		dobCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("birthDate"));
 
 		TableColumn phoneCol = new TableColumn(phoneNumberLabel);
 		phoneCol.setMinWidth(100);
+		phoneCol.setStyle("-fx-alignment: CENTER;");
 		phoneCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("phoneNumber"));
 
 		TableColumn emailCol = new TableColumn(emailLabel);
 		emailCol.setMinWidth(100);
+		emailCol.setStyle("-fx-alignment: CENTER;");
 		emailCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("email"));
 
 		TableColumn troopIDCol = new TableColumn(troopIDLabel);
 		troopIDCol.setMinWidth(100);
+		troopIDCol.setStyle("-fx-alignment: CENTER;");
 		troopIDCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("troopID"));
 
 		TableColumn statusCol = new TableColumn(statusLabel);
 		statusCol.setMinWidth(100);
+		statusCol.setStyle("-fx-alignment: CENTER;");
 		statusCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("status"));
 
 		TableColumn dateCol = new TableColumn(dateLastUpdatedLabel);
 		dateCol.setMinWidth(100);
+		dateCol.setStyle("-fx-alignment: CENTER;");
 		dateCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("dateStatusUpdated"));
-
-		tableOfScouts.getColumns().addAll(scoutIDCol, firstNameCol, middleNameCol, lastNameCol, dobCol, phoneCol, emailCol, troopIDCol, statusCol, dateCol);
-		
-		ScrollPane scrollPane = new ScrollPane();
-		scrollPane.setPrefSize(115, 150);
-		scrollPane.setContent(tableOfScouts);
 
 		cancelButton = new Button(cancelButtonLabel);
 		submitButton = new Button(submitButtonLabel);
+
+		tableOfScouts.getColumns().addAll(scoutIDCol, firstNameCol, middleNameCol, lastNameCol, dobCol, phoneCol,
+				emailCol, troopIDCol, statusCol, dateCol);
+		createActionEventsScout();
+
+		tableOfScouts.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+		ScrollPane scrollPane = new ScrollPane();
+		scrollPane.setPrefSize(800, 300);
+		scrollPane.setContent(tableOfScouts);
+
+		HBox btnContainer = new HBox(30);
+		btnContainer.setAlignment(Pos.CENTER);
+		btnContainer.getChildren().add(submitButton);
+		btnContainer.getChildren().add(cancelButton);
+
+		vbox.getChildren().add(grid);
+		vbox.getChildren().add(scrollPane);
+		vbox.getChildren().add(btnContainer);
 		
-		submitButton.setOnAction(new EventHandler<ActionEvent>() {
+		return vbox;
+	}
 
-			
-			@Override
-			public void handle(ActionEvent e) {
+	
+	// Create the main form content
+	// -------------------------------------------------------------
+	private VBox createFormContentSession() {
+		VBox vbox = new VBox(10);
 
-				//if there isn't a selection.....
-				if (tableOfScouts.getSelectionModel().getSelectedItem() == null) {
-					statusLog.displayErrorMessage(selectionErrorMessage);
-				}
-				else {
-				clearErrorMessage();
-				ScoutTableModel scm = tableOfScouts.getSelectionModel().getSelectedItem();
-				myModel.stateChangeRequest("showView", scm.getScoutID());
-				}
-			}
-		});
+		GridPane grid = new GridPane();
+		grid.setAlignment(Pos.CENTER);
+		grid.setHgap(20);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(25, 25, 25, 25));
 
-		cancelButton.setOnAction(new EventHandler<ActionEvent>() {
+		Text prompt = new Text(scoutsFoundSession);
+		prompt.setWrappingWidth(350);
+		prompt.setTextAlignment(TextAlignment.CENTER);
+		prompt.setFill(Color.BLACK);
+		grid.add(prompt, 0, 0, 2, 1);
 
-			
-			@Override
-			public void handle(ActionEvent e) {
+		tableOfScouts = new TableView<ScoutTableModel>();
+		tableOfScouts.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		Text placeholder = new Text("\t\tNO SCOUTS FOUND");
+		VBox test = new VBox();
+		test.setAlignment(Pos.TOP_LEFT);
+		test.getChildren().add(placeholder);
+		placeholder.setTextAlignment(TextAlignment.CENTER);
+		tableOfScouts.setPlaceholder(test);
 
-				myModel.stateChangeRequest("CancelAddScout", null);
-			}
-		});
-		
+		TableColumn scoutIDCol = new TableColumn(scoutIDLabel);
+		scoutIDCol.setMinWidth(50);
+		scoutIDCol.setStyle("-fx-alignment: CENTER;");
+		scoutIDCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("scoutID"));
+
+		TableColumn lastNameCol = new TableColumn(lastNameLabel);
+		lastNameCol.setMinWidth(100);
+		lastNameCol.setStyle("-fx-alignment: CENTER;");
+		lastNameCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("lastName"));
+
+		TableColumn firstNameCol = new TableColumn(firstNameLabel);
+		firstNameCol.setMinWidth(100);
+		firstNameCol.setStyle("-fx-alignment: CENTER;");
+		firstNameCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("firstName"));
+
+		TableColumn middleNameCol = new TableColumn(middleNameLabel);
+		middleNameCol.setMinWidth(100);
+		middleNameCol.setStyle("-fx-alignment: CENTER;");
+		middleNameCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("middleName"));
+
+		TableColumn dobCol = new TableColumn(dateOfBirthLabel);
+		dobCol.setMinWidth(100);
+		dobCol.setStyle("-fx-alignment: CENTER;");
+		dobCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("birthDate"));
+
+		TableColumn phoneCol = new TableColumn(phoneNumberLabel);
+		phoneCol.setMinWidth(100);
+		phoneCol.setStyle("-fx-alignment: CENTER;");
+		phoneCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("phoneNumber"));
+
+		TableColumn emailCol = new TableColumn(emailLabel);
+		emailCol.setMinWidth(100);
+		emailCol.setStyle("-fx-alignment: CENTER;");
+		emailCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("email"));
+
+		TableColumn troopIDCol = new TableColumn(troopIDLabel);
+		troopIDCol.setMinWidth(100);
+		troopIDCol.setStyle("-fx-alignment: CENTER;");
+		troopIDCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("troopID"));
+
+		TableColumn statusCol = new TableColumn(statusLabel);
+		statusCol.setMinWidth(100);
+		statusCol.setStyle("-fx-alignment: CENTER;");
+		statusCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("status"));
+
+		TableColumn dateCol = new TableColumn(dateLastUpdatedLabel);
+		dateCol.setMinWidth(100);
+		dateCol.setStyle("-fx-alignment: CENTER;");
+		dateCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("dateStatusUpdated"));
+
+		cancelButton = new Button(cancelButtonLabel);
+		submitButton = new Button(submitButtonLabel);
+
+		tableOfScouts.getColumns().addAll(firstNameCol, middleNameCol, lastNameCol, scoutIDCol, dobCol);
+		createActionEventsSession();
+
+		tableOfScouts.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+		ScrollPane scrollPane = new ScrollPane();
+		scrollPane.setPrefSize(800, 300);
+		scrollPane.setContent(tableOfScouts);
+
 		HBox btnContainer = new HBox(30);
 		btnContainer.setAlignment(Pos.CENTER);
 		btnContainer.getChildren().add(submitButton);
@@ -248,35 +351,71 @@ public class ScoutCollectionView extends View {
 
 		return vbox;
 	}
-
-	protected MessageView createStatusLog(String initialMessage) {
-		statusLog = new MessageView(initialMessage);
-
-		return statusLog;
-	}
-
-	/**
-	 * Display info message
-	 */
+	
+	
+	
+	
+	
 	// ----------------------------------------------------------
-	public void displayMessage(String message) {
-		statusLog.displayMessage(message);
+	public void createActionEventsScout() {
+		submitButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent e) {
+
+				// if there isn't a selection.....
+				if (tableOfScouts.getSelectionModel().getSelectedItem() == null) {
+					System.out.println("select something");
+				} 
+				else {
+					ScoutTableModel scm = tableOfScouts.getSelectionModel().getSelectedItem();
+					myModel.stateChangeRequest("showView", scm.getScoutID());
+				}
+			}
+		});
+
+		cancelButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent e) {
+
+				myModel.stateChangeRequest("CancelAddScout", null);
+			}
+		});
 	}
 
-	/**
-	 * Clear error message
-	 */
+	
 	// ----------------------------------------------------------
-	public void clearErrorMessage() {
-		statusLog.clearErrorMessage();
-	}
-	/*
-	 * //-----------------------------------------------------------------------
-	 * --- public void mouseClicked(MouseEvent click) { if(click.getClickCount()
-	 * >= 2) { processAccountSelected(); } }
-	 */
+	public void createActionEventsSession() {
+		submitButton.setOnAction(new EventHandler<ActionEvent>() {
 
-	@Override
+			@Override
+			public void handle(ActionEvent e) {
+
+				// if there isn't a selection.....
+				if (tableOfScouts.getSelectionModel().getSelectedItems() == null) {
+					System.out.println("select something");
+				
+				} 
+				else {
+//					CHANGE THIS CHANGE THIS CHANGE THIS
+					ObservableList<ScoutTableModel> scm = tableOfScouts.getSelectionModel().getSelectedItems();
+					myModel.stateChangeRequest("ShowScoutShiftView", scm);
+				}
+			}
+		});
+
+		cancelButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent e) {
+
+				myModel.stateChangeRequest("CancelSession", null);
+			}
+		});
+	}
+
+	// ----------------------------------------------------------
 	public void updateState(String key, Object value) {
 		// TODO Auto-generated method stub
 

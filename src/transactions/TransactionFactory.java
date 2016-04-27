@@ -23,6 +23,11 @@ public class TransactionFactory {
 			trans = new TreeTypeTransaction(transType, myLocale);
 		}
 		
+		else if (transType.equals("OpenSession")) {
+			trans = new SessionTransaction(myLocale);
+		}
+		
+		
 		return trans;
 	}
 }

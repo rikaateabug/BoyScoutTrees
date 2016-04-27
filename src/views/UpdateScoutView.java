@@ -168,6 +168,7 @@ public class UpdateScoutView extends View {
 		
 		firstName = new TextField((String)myScout.getState("firstName"));
 		firstName.setEditable(true);
+		
 		grid.add(firstName, 1, 1);
 		// -------------------------------------------------------------
 		Text mnLabel = new Text(middleNameLabel);

@@ -2,6 +2,7 @@ package models;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
@@ -48,7 +49,7 @@ public class Tester {
 		else
 			System.out.println(s + " does not match our regex");
 	}
-	*/
+	
 		Locale myLocale = new Locale("en", "US");
 		TreeTypeTransaction trans;
 		try {
@@ -58,7 +59,33 @@ public class Tester {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	
 		
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		DateFormat tf = new SimpleDateFormat("HH:mm:ss");
 		
+		Date d = new Date();
+		String ahh = df.format(d);
+		String ohh = tf.format(d);
+		
+		System.out.println(ahh + "\n" + ohh);
+	*/
+		ArrayList<Shift> myList = new ArrayList<Shift>(5);
+
+		Shift s = null;
+		myList.add(s);
+		myList.add(s);
+		s = new Shift();
+		myList.add(s);
+		
+		System.out.println();
+		
+		for (int i = 0; i < myList.size(); i++) {
+			if (myList.get(i) == null) {
+				System.out.println(i + " is null");
+			}
+			else
+				System.out.println(i + " is not null");
+		}
 	}
 }

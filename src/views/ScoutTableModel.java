@@ -37,7 +37,7 @@ public class ScoutTableModel {
 		status = new SimpleStringProperty(scoutData.elementAt(8));
 		dateStatusUpdated = new SimpleStringProperty(scoutData.elementAt(9));
 	}
-
+	
 	// ----------------------------------------------------------------------------
 	public String getScoutID() {
 		return scoutID.get();

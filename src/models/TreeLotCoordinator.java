@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Properties;
 
 import event.Event;
+import exception.InvalidPrimaryKeyException;
 import impresario.IModel;
 import impresario.IView;
 import impresario.ModelRegistry;
@@ -41,7 +42,9 @@ public class TreeLotCoordinator implements IView, IModel {
 	private Hashtable<String, Scene> myViews;
 
 	private String transactionErrorMessage = "";
-
+	private Session mySession = new Session();
+	private boolean activeSession;
+	
 	// ----------------------------------------------------------
 	// Constructor
 	public TreeLotCoordinator() {
@@ -55,8 +58,13 @@ public class TreeLotCoordinator implements IView, IModel {
 			new Event(Event.getLeafLevelClassName(this), "TreeLotCoordinator", "Could not instantiate Registry",
 					Event.ERROR);
 		}
-
+		
 		setDependencies();
+		try {
+			activeSession = mySession.isOpenSession();
+		} catch (InvalidPrimaryKeyException e) {
+			e.printStackTrace();
+		}
 		createAndShowWelcomeView();
 	}
 
@@ -75,7 +83,8 @@ public class TreeLotCoordinator implements IView, IModel {
 		dependencies = new Properties();
 		myRegistry.setDependencies(dependencies);
 	}
-
+	
+	
 	// -----------------------------------------------------------------------------------
 	public Object getState(String key) {
 		
@@ -86,6 +95,11 @@ public class TreeLotCoordinator implements IView, IModel {
 			else
 				return "Error: Locale is undefined";
 		}
+		if (key.equals("SessionStatus")) {
+			return activeSession;
+		}
+		
+		
 		return "";
 	}
 
@@ -98,6 +112,17 @@ public class TreeLotCoordinator implements IView, IModel {
 		else if (key.equals("CancelTransaction") == true)
 		{
 			createAndShowTreeLotCoordinatorView();
+		}
+		
+		else if (key.equals("UpdateTreeLotCoordinator") == true) {
+			try {
+				System.out.println("Updated open shifts");
+				updateOpenShifts();
+				createAndShowModifiedTreeLotCoordinatorView();
+				
+			} catch (InvalidPrimaryKeyException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		else if (key.equals("SetLocale")) {
@@ -119,6 +144,16 @@ public class TreeLotCoordinator implements IView, IModel {
 			String transType = key;
 			doTransaction(transType);
 		}
+		else if (key.equals("OpenSession")) {
+			String transType = key;
+			
+			if (activeSession == false) {
+				doTransaction(transType);
+			}
+			else {
+				//There is no active session, give an error
+			}
+		}
 		
 		myRegistry.updateSubscribers(key, this);
 	}
@@ -129,6 +164,9 @@ public class TreeLotCoordinator implements IView, IModel {
 		try {
 			Transaction trans = TransactionFactory.createTransaction(transType, myLocale);
 			trans.subscribe("CancelTransaction", this);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			trans.subscribe("UpdateTreeLotCoordinator", this);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			trans.stateChangeRequest("DoYourJob", "");
 			 
 		} catch (Exception ex) {
@@ -142,6 +180,11 @@ public class TreeLotCoordinator implements IView, IModel {
 	public void updateState(String key, Object value) {
 		stateChangeRequest(key, value);
 
+	}
+	
+	// -----------------------------------------------------------------------------------
+	public void updateOpenShifts() throws InvalidPrimaryKeyException {
+		activeSession = mySession.isOpenSession();
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -166,6 +209,17 @@ public class TreeLotCoordinator implements IView, IModel {
 		swapToView(currentScene);
 	}
 
+	// -----------------------------------------------------------------------------
+	private void createAndShowModifiedTreeLotCoordinatorView() {
+		myViews.remove("TreeLotCoordinatorView");
+
+		View newView = ViewFactory.createView("TreeLotCoordinatorView", this);
+		Scene currentScene = new Scene(newView);
+		myViews.put("TreeLotCoordinatorView", currentScene);
+		swapToView(currentScene);
+	}
+	
+	
 	// -----------------------------------------------------------------------------
 	private void createAndShowWelcomeView() {
 		Scene currentScene = (Scene) myViews.get("WelcomeView");

@@ -94,7 +94,7 @@ public class Scout extends EntityBase implements IView {
 		while (allKeys.hasMoreElements() == true) {
 			String nextKey = (String) allKeys.nextElement();
 			String nextValue = props.getProperty(nextKey);
-
+			
 			if (nextValue != null) {
 				persistentState.setProperty(nextKey, nextValue);
 			}
