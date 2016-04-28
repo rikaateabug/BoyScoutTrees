@@ -82,6 +82,11 @@ public class ViewFactory {
 			return new ScoutShiftView(model);
 		}
 		
+		else if (viewName.equals("SellTreeView") == true)
+		{
+			return new SellTreeView(model);
+		}
+		
 		else
 			return null;
 	}

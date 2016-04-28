@@ -189,6 +189,11 @@ public class ScoutCollection extends EntityBase implements IView {
 	public int size() {
 		return scouts.size();
 	}
+	
+	// ------------------------------------------------------------------
+	public Scout get(int pos) {
+		return scouts.get(pos);
+	}
 
 	// ------------------------------------------------------------------
 	public void setScoutsFromSelection(ObservableList<ScoutTableModel> selectedScouts) throws InvalidPrimaryKeyException {

@@ -160,7 +160,7 @@ public class OpenSessionView extends View {
 
 		HBox custDateRow = new HBox(5);
 		// custDateRow.setAlignment(Pos.CENTER_LEFT);
-		custDateRow.getChildren().addAll(customDate, custDate);
+		//custDateRow.getChildren().addAll(customDate, custDate);
 		// -------------------------------------------------------------
 		Text sLabel = new Text(startTimeLabel);
 		sLabel.setFont(myFont);
@@ -202,7 +202,7 @@ public class OpenSessionView extends View {
 
 		HBox custDateRow2 = new HBox(5);
 		// custDateRow2.setAlignment(Pos.CENTER_LEFT);
-		custDateRow2.getChildren().addAll(customTime, custTime);
+		//custDateRow2.getChildren().addAll(customTime, custTime);
 		// -------------------------------------------------------------
 
 		Text scLabel = new Text(startingCashLabel);
@@ -221,11 +221,11 @@ public class OpenSessionView extends View {
 		// -------------------------------------------------------------
 		VBox section1 = new VBox(10);
 		section1.setPadding(new Insets(0, 0, 0, 20));
-		section1.getChildren().addAll(dLabel, defaultDate, custDateRow);
+		//section1.getChildren().addAll(dLabel, defaultDate, custDateRow);
 
 		VBox section2 = new VBox(10);
 		section2.setPadding(new Insets(0, 0, 0, 20));
-		section2.getChildren().addAll(sLabel, defaultTime, custDateRow2);
+		//section2.getChildren().addAll(sLabel, defaultTime, custDateRow2);
 
 		VBox section3 = new VBox(10);
 		section3.setPadding(new Insets(0, 0, 0, 20));
@@ -334,7 +334,7 @@ public class OpenSessionView extends View {
 
 		Properties props = new Properties();
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		DateFormat tf = new SimpleDateFormat("HH:mm:ss");
+		DateFormat tf = new SimpleDateFormat("HH:mm");
 		Date d = new Date();
 		
 		if (date.equals("default")) {
@@ -342,6 +342,7 @@ public class OpenSessionView extends View {
 		}
 		else if (date.equals("custom")) {
 			//Figure this out
+			
 		}
 		
 		if (time.equals("default")) {

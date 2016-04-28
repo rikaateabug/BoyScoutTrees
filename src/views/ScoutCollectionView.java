@@ -397,10 +397,15 @@ public class ScoutCollectionView extends View {
 					System.out.println("select something");
 				
 				} 
+				
 				else {
 //					CHANGE THIS CHANGE THIS CHANGE THIS
 					ObservableList<ScoutTableModel> scm = tableOfScouts.getSelectionModel().getSelectedItems();
-					myModel.stateChangeRequest("ShowScoutShiftView", scm);
+					System.out.println("scm size is: " + scm.size());
+					if (scm.size() <= 4) {
+						myModel.stateChangeRequest("ShowScoutShiftView", scm);
+					}
+					//System.out.println("too many scouts selected");
 				}
 			}
 		});

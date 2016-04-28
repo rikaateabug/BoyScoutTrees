@@ -69,7 +69,7 @@ public class Tester {
 		String ohh = tf.format(d);
 		
 		System.out.println(ahh + "\n" + ohh);
-	*/
+
 		ArrayList<Shift> myList = new ArrayList<Shift>(5);
 
 		Shift s = null;
@@ -87,5 +87,11 @@ public class Tester {
 			else
 				System.out.println(i + " is not null");
 		}
+		*/
+		ArrayList<String> l = new ArrayList<String>();
+		l.add("one");
+		l.add("two");
+		l.add("three");
+		System.out.println(l.get(1));
 	}
 }

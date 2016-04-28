@@ -105,16 +105,19 @@ public class Session extends EntityBase implements IView {
 	}
 
 	// ------------------------------------------------------
-	public void insertNewSession()
+	public Integer insertNewSession()
 	{		
 		try 
 		{
 			Integer i = insertAutoIncrementalPersistentState(mySchema, persistentState);	
 			System.out.println(i + " is the primary key of the new Book");
+			return i;
 		}
 		catch (SQLException e) {
 			System.out.println("Error inserting new Book into the database" + e.toString());
 		}
+		
+		return null;
 	}
 	
 	// ------------------------------------------------------
@@ -145,6 +148,8 @@ public class Session extends EntityBase implements IView {
 		stateChangeRequest(key, value);
 	}
 
+	
+	
 	// ------------------------------------------------------
 	public void updateStateInDatabase() {
 

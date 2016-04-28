@@ -128,6 +128,15 @@ public class Shift extends EntityBase implements IView {
 	}
 
 	// ------------------------------------------------------
+	public void insertNewShift() {
+		try {
+			Integer i = insertAutoIncrementalPersistentState(mySchema, persistentState);
+			System.out.println(i + " is the primary key of the new shift");
+		} catch (SQLException e) {
+			System.out.println("Error inserting new shift into the database" + e.toString());
+		}
+	}
+	// ------------------------------------------------------
 	public void stateChangeRequest(String key, Object value) {
 		
 		myRegistry.updateSubscribers(key, this);
