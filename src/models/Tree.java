@@ -127,6 +127,13 @@ public class Tree extends EntityBase implements IView {
 	}
 
 	// ----------------------------------------------------------
+	public void setSold() {
+		System.out.println("per state is: " + persistentState.getProperty("status"));
+		persistentState.setProperty("status", "Sold");
+		System.out.println(" now per state is: " + persistentState.getProperty("status"));
+	}
+	
+	// ----------------------------------------------------------
 	public void stateChangeRequest(String key, Object value) {
 		{
 

@@ -24,8 +24,10 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import models.Session;
+import models.TransactionCollection;
 import models.TreeLotCoordinator;
 import transactions.SessionTransaction;
+import userinterface.MessageView;
 import views.View;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -45,7 +47,7 @@ import impresario.IModel;
 
 /** The class containing the Account View for the ATM application */
 // ==============================================================
-public class OpenSessionView extends View {
+public class CloseSessionView extends View {
 
 	// GUI components
 
@@ -55,6 +57,8 @@ public class OpenSessionView extends View {
 	protected final String currentDateLabel = new String(myResourceBundle.getString("currentDateLabel"));
 	protected final String currentTimeLabel = new String(myResourceBundle.getString("currentTimeLabel"));
 	protected final String startingCashLabel = new String(myResourceBundle.getString("startingCashLabel"));
+	protected final String endingCashLabel = new String(myResourceBundle.getString("endingCashLabel"));
+	protected final String totalCheckTransactionsLabel = new String(myResourceBundle.getString("totalCheckTransactionsLabel"));
 	protected final String notesLabel = new String(myResourceBundle.getString("notesLabel"));
 	protected final String cancelButtonLabel = new String(myResourceBundle.getString("cancelButtonLabel"));
 	protected final String submitButtonLabel = new String(myResourceBundle.getString("submitButtonLabel"));
@@ -62,24 +66,32 @@ public class OpenSessionView extends View {
 	protected final String nullFieldErrorMessage = new String(myResourceBundle.getString("nullFieldErrorMessage"));
 
 	protected TextField startCash;
+	protected TextField endCash;
 	protected TextField custDate;
+	protected TextField checks;
+	
 	protected TextField custTime;
 	protected TextArea notes;
 
-	protected RadioButton defaultDate;
-	protected RadioButton customDate;
-
-	protected RadioButton defaultTime;
-	protected RadioButton customTime;
-
+	protected Session mySession;
+	protected TransactionCollection mySales;
 	protected Button submitButton;
 	protected Button cancelButton;
+	protected MessageView statusLog;
 
 	// constructor for this class -- takes a model object
 	// ----------------------------------------------------------
-	public OpenSessionView(IModel sessTrans) {
-		super(sessTrans, "OpenSessionView");
-
+	public CloseSessionView(IModel sessTrans) {
+		super(sessTrans, "CloseSessionView");
+		
+		mySession = (Session)myModel.getState("Session");
+		String strID = (String)mySession.getState("sessionID");
+		System.out.println("The session id is: " + strID);
+		mySales = new TransactionCollection();
+		mySales.findAllTransactionsFromSession(strID);
+		System.out.println("The size of mySales is " + mySales.size());
+		
+		
 		// create a container for showing the contents
 		VBox container = new VBox(10);
 		container.setPadding(new Insets(15, 5, 5, 5));
@@ -89,6 +101,7 @@ public class OpenSessionView extends View {
 
 		// create our GUI components, add them to this Container
 		container.getChildren().add(createFormContent());
+		container.getChildren().add(createStatusLog(" "));
 		
 		getChildren().add(container);
 
@@ -119,92 +132,28 @@ public class OpenSessionView extends View {
 		vbox.setPadding(new Insets(20, 25, 25, 25));
 
 		Text dLabel = new Text(dateLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 15);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		dLabel.setFont(myFont);
 		dLabel.setWrappingWidth(100);
 		// dLabel.setTextAlignment(TextAlignment.RIGHT);
 		custDate = new TextField();
+		custDate.setText((String)mySession.getState("startDate"));
 		custDate.setEditable(false);
 		custDate.setMouseTransparent(true);
 		custDate.setFocusTraversable(false);
 		custDate.setStyle("-fx-control-inner-background: #d3d3d3;");
 
-		final ToggleGroup group = new ToggleGroup();
-		defaultDate = new RadioButton(currentDateLabel);
-		defaultDate.setToggleGroup(group);
-		defaultDate.setSelected(true);
-
-		customDate = new RadioButton("");
-		customDate.setToggleGroup(group);
-
-		group.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-			public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-				if (group.getSelectedToggle() != null) {
-					if (group.getSelectedToggle().equals(defaultDate)) {
-						custDate.setEditable(false);
-						custDate.setMouseTransparent(true);
-						custDate.setFocusTraversable(false);
-						custDate.setStyle("-fx-control-inner-background: #d3d3d3;");
-					}
-
-					else if (group.getSelectedToggle().equals(customDate)) {
-						custDate.setEditable(true);
-						custDate.setMouseTransparent(false);
-						custDate.setFocusTraversable(true);
-						custDate.requestFocus();
-						custDate.setStyle("-fx-control-inner-background: #ffffff;");
-					}
-				}
-			}
-		});
-
-		HBox custDateRow = new HBox(5);
-		// custDateRow.setAlignment(Pos.CENTER_LEFT);
-		//custDateRow.getChildren().addAll(customDate, custDate);
-		// -------------------------------------------------------------
-		Text sLabel = new Text(startTimeLabel);
-		sLabel.setFont(myFont);
-		sLabel.setWrappingWidth(100);
+		Text stLabel = new Text(startTimeLabel);
+		stLabel.setFont(myFont);
+		stLabel.setWrappingWidth(100);
 		custTime = new TextField();
+		custTime.setText((String)mySession.getState("startTime"));
 		custTime.setEditable(false);
 		custTime.setMouseTransparent(true);
 		custTime.setFocusTraversable(false);
 		custTime.setStyle("-fx-control-inner-background: #d3d3d3;");
 
-		final ToggleGroup group2 = new ToggleGroup();
-		defaultTime = new RadioButton(currentTimeLabel);
-		defaultTime.setToggleGroup(group2);
-		defaultTime.setSelected(true);
-
-		customTime = new RadioButton("");
-		customTime.setToggleGroup(group2);
-
-		group2.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-			public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-				if (group2.getSelectedToggle() != null) {
-					if (group2.getSelectedToggle().equals(defaultTime)) {
-						custTime.setEditable(false);
-						custTime.setMouseTransparent(true);
-						custTime.setFocusTraversable(false);
-						custTime.setStyle("-fx-control-inner-background: #d3d3d3;");
-					}
-
-					else if (group2.getSelectedToggle().equals(customTime)) {
-						custTime.setEditable(true);
-						custTime.setMouseTransparent(false);
-						custTime.setFocusTraversable(true);
-						custTime.requestFocus();
-						custTime.setStyle("-fx-control-inner-background: #ffffff;");
-					}
-				}
-			}
-		});
-
-		HBox custDateRow2 = new HBox(5);
-		// custDateRow2.setAlignment(Pos.CENTER_LEFT);
-		//custDateRow2.getChildren().addAll(customTime, custTime);
-		// -------------------------------------------------------------
-
+		
 		Text scLabel = new Text(startingCashLabel);
 		scLabel.setFont(myFont);
 		scLabel.setWrappingWidth(100);
@@ -212,20 +161,41 @@ public class OpenSessionView extends View {
 		startCash.setPrefWidth(100);
 		startCash.setMinWidth(100);
 		startCash.setMaxWidth(100);
+		startCash.setText((String)mySession.getState("startingCash"));
+		startCash.setEditable(false);
+		startCash.setMouseTransparent(true);
+		startCash.setFocusTraversable(false);
+		startCash.setStyle("-fx-control-inner-background: #d3d3d3;");
 
-		Text nLabel = new Text(notesLabel);
-		nLabel.setFont(myFont);
-		nLabel.setWrappingWidth(100);
-		notes = new TextArea();
+		Text ecLabel = new Text(endingCashLabel);
+		ecLabel.setFont(myFont);
+		ecLabel.setWrappingWidth(100);
+		endCash = new TextField();
+		endCash.setPrefWidth(100);
+		endCash.setMinWidth(100);
+		endCash.setMaxWidth(100);
+		double end = mySales.getEndingCash(); 
+		endCash.setText(Double.toString(end) + "0");
+		
+		Text tcLabel = new Text(totalCheckTransactionsLabel);
+		tcLabel.setFont(myFont);
+		tcLabel.setWrappingWidth(100);
+		checks = new TextField();
+		checks.setPrefWidth(100);
+		checks.setMinWidth(100);
+		checks.setMaxWidth(100);
+		int checksAmt = mySales.getTotalCheckTransactions(); 
+		checks.setText(Integer.toString(checksAmt));
+		
 
 		// -------------------------------------------------------------
 		VBox section1 = new VBox(10);
 		section1.setPadding(new Insets(0, 0, 0, 20));
-		//section1.getChildren().addAll(dLabel, defaultDate, custDateRow);
+		section1.getChildren().addAll(dLabel, custDate);
 
 		VBox section2 = new VBox(10);
 		section2.setPadding(new Insets(0, 0, 0, 20));
-		//section2.getChildren().addAll(sLabel, defaultTime, custDateRow2);
+		section2.getChildren().addAll(stLabel, custTime);
 
 		VBox section3 = new VBox(10);
 		section3.setPadding(new Insets(0, 0, 0, 20));
@@ -233,8 +203,14 @@ public class OpenSessionView extends View {
 
 		VBox section4 = new VBox(10);
 		section4.setPadding(new Insets(0, 0, 0, 20));
-		section4.getChildren().addAll(nLabel, notes);
+		section4.getChildren().addAll(ecLabel, endCash);
 
+		VBox section5 = new VBox(10);
+		section5.setPadding(new Insets(0, 0, 0, 20));
+		section5.getChildren().addAll(tcLabel, checks);
+
+		
+		
 		VBox spacing = new VBox(50);
 		spacing.setPadding(new Insets(0, 0, 20, 0));
 		VBox spacing2 = new VBox(50);
@@ -242,7 +218,7 @@ public class OpenSessionView extends View {
 		VBox spacing3 = new VBox(50);
 		spacing3.setPadding(new Insets(0, 0, 20, 0));
 
-		vbox.getChildren().addAll(section1, spacing, section2, spacing2, section3, spacing3, section4);
+		vbox.getChildren().addAll(section1, spacing, section2, spacing2, section3, spacing3, section4, section5);
 		// -------------------------------------------------------------
 
 		HBox doneCont = new HBox(10);
@@ -298,85 +274,55 @@ public class OpenSessionView extends View {
 		String time = new String();
 		String date = new String();
 		
-		if (startCash.getText().isEmpty()) {
+		if (endCash.getText().isEmpty()) {
 			System.out.println("Starting cash can't be empty");
-			startCash.requestFocus();
+			endCash.requestFocus();
 			return;
 		}
-		else if (!(startCash.getText().matches("(\\d)+(\\.\\d{2})?"))) {
-			System.out.println("Starting cash invalid");
-			startCash.requestFocus();
+		else if (!(endCash.getText().matches("(\\d)+(\\.\\d{2})?"))) {
+			System.out.println("Ending cash invalid");
+			endCash.requestFocus();
 			return;
 		}
 		
-		if (customDate.isSelected() == true) {
-			//Check the format (isn't null)
-			date = "custom";
+		else if (checks.getText().isEmpty()) {
+			System.out.println("Starting cash can't be empty");
+			checks.requestFocus();
+			return;
 		}
-		else if (defaultDate.isSelected() == true) {
-			date = "default";
+		else {
+			Properties p = setPropertiesObject();
+			myModel.stateChangeRequest("closeSession", p);
+			myModel.stateChangeRequest("UpdateTreeLotCoordinator", null);
 		}
-		
-		if (customTime.isSelected() == true) {
-			//Check the format (isn't null)
-			time = "custom";
-		}
-		else if (defaultTime.isSelected() == true) {
-			time = "default";
-		}
-		Properties p = setPropertiesObject(date, time);
-		myModel.stateChangeRequest("selectScouts", p);
 	}
 
 	// ----------------------------------------------------------
-	public Properties setPropertiesObject(String date, String time) {
+	public Properties setPropertiesObject() {
 
 		Properties props = new Properties();
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		DateFormat tf = new SimpleDateFormat("HH:mm");
 		Date d = new Date();
 		
-		if (date.equals("default")) {
-			props.setProperty("startDate", df.format(d));
-		}
-		else if (date.equals("custom")) {
-			//Figure this out
-			
-		}
-		
-		if (time.equals("default")) {
-			props.setProperty("startTime", tf.format(d));
-		}
-		else if (time.equals("custom")) {
-			//Figure this out
-		}
-		
-		if (notes.getText().isEmpty()) {
-			props.setProperty("notes", "");
-		}
-		else {
-			props.setProperty("notes", notes.getText());
-		}
-		
-		
-		props.setProperty("startingCash", startCash.getText());
-		
+		props.setProperty("sessionID", (String)mySession.getState("sessionID"));
+		props.setProperty("totalCheckTrans", checks.getText());
+		props.setProperty("endingCash", endCash.getText());
+		props.setProperty("endTime", tf.format(d));
+
 		
 		return props;
 	}
 
 	// ----------------------------------------------------------
-	public void clearTextFields() {
-		/**
-		 * lastName.clear(); firstName.clear(); middleName.clear();
-		 * dateOfBirth.clear(); phoneNumber.clear(); email.clear();
-		 * troopID.clear(); status.setValue(activeStatus);
-		 */
+	protected MessageView createStatusLog(String initialMessage) {
+		statusLog = new MessageView(initialMessage);
+
+		return statusLog;
 	}
 
 	// ----------------------------------------------------------
 	public void displayErrorMessage(String message) {
-		// statusLog.displayErrorMessage(message);
+		statusLog.displayErrorMessage(message);
 	}
 
 	/**
@@ -384,7 +330,7 @@ public class OpenSessionView extends View {
 	 */
 	// ----------------------------------------------------------
 	public void displayMessage(String message) {
-		// statusLog.displayMessage(message);
+		statusLog.displayMessage(message);
 	}
 
 	/**
@@ -392,7 +338,7 @@ public class OpenSessionView extends View {
 	 */
 	// ----------------------------------------------------------
 	public void clearErrorMessage() {
-		// statusLog.clearErrorMessage();
+		statusLog.clearErrorMessage();
 	}
 
 	public void updateState(String key, Object value) {

@@ -8,10 +8,12 @@ import exception.InvalidPrimaryKeyException;
 import impresario.IView;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import models.Sale;
 import models.Scout;
 import models.ScoutCollection;
 import models.Session;
 import models.Shift;
+import models.Tree;
 import views.AddScoutView;
 import views.ScoutCollectionView;
 import views.View;
@@ -23,9 +25,12 @@ public class SessionTransaction extends Transaction {
 	private ScoutCollection myScoutCollection;
 	private ArrayList<Shift> myShifts;
 	private String mySessionID;
+	private String transType;
+	
 	// ----------------------------------------------------------
-	public SessionTransaction(Locale locale) throws Exception {
+	public SessionTransaction(String trans, Locale locale) throws Exception {
 		super(locale);
+		transType = trans;
 	}
 
 	// ----------------------------------------------------------
@@ -43,6 +48,7 @@ public class SessionTransaction extends Transaction {
 	// ----------------------------------------------------------
 	protected Scene createView() {
 
+		if (transType.equals("OpenSession")) {
 		Scene currentScene = myViews.get("OpenSessionView");
 
 		if (currentScene == null) {
@@ -53,6 +59,24 @@ public class SessionTransaction extends Transaction {
 		} else {
 			return currentScene;
 		}
+		}
+		
+		if (transType.equals("CloseSession")) {
+			
+			setSession();
+			Scene currentScene = myViews.get("CloseSessionView");
+			System.out.println("I got here");
+			if (currentScene == null) {
+				View newView = ViewFactory.createView("CloseSessionView", this);
+				currentScene = new Scene(newView);
+				myViews.put("CloseSessionView", currentScene);
+				return currentScene;
+			} else {
+				return currentScene;
+			}
+			}
+		
+		return null;
 	}
 
 	
@@ -118,6 +142,16 @@ public class SessionTransaction extends Transaction {
 	}
 
 	// ----------------------------------------------------------
+	public void setSession() {
+		Session sess = new Session();
+		try {
+			String mySessionID = sess.getOpenSessionID();
+			mySession = new Session(mySessionID);
+		} catch (InvalidPrimaryKeyException e1) {
+			e1.printStackTrace();
+		}
+	}
+	// ----------------------------------------------------------
 	public void stateChangeRequest(String key, Object value) {
 
 		if (key.equals("DoYourJob")) {
@@ -134,6 +168,7 @@ public class SessionTransaction extends Transaction {
 			}
 		}
 		
+		
 		else if (key.equals("selectScouts")) {
 			mySession = new Session((Properties) value);
 			mySessionID = mySession.insertNewSession().toString();
@@ -141,6 +176,12 @@ public class SessionTransaction extends Transaction {
 			myScoutCollection = new ScoutCollection(this);
 			myScoutCollection.findAllActiveScoutsAlphabetically();
 			swapToView(createScoutCollectionView());
+		}
+		
+		else if (key.equals("closeSession")) {
+			mySession = new Session((Properties) value);
+			mySession.updateStateInDatabase();
+			System.out.println("success");
 		}
 		
 		else if (key.equals("ShowScoutShiftView")) {

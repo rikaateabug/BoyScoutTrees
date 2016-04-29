@@ -47,8 +47,13 @@ public class TreeLotCoordinatorView extends View {
 	protected final Button removeTree = new Button(myResourceBundle.getString("removeTree"));
 	protected final Button addTreeType = new Button(myResourceBundle.getString("addTreeType"));
 	protected final Button updateTreeType = new Button(myResourceBundle.getString("updateTreeType"));
-	
 
+	protected final String noOpenShifts = new String(myResourceBundle.getString("noOpenShifts"));
+	protected final String openShifts = new String(myResourceBundle.getString("openShifts"));
+	protected final String openShiftError = new String(myResourceBundle.getString("openShiftError"));
+	protected final String sellTreeError = new String(myResourceBundle.getString("sellTreeError"));
+	
+	protected Text myShiftLabel;
 	
 	//Constructor
 	public TreeLotCoordinatorView(IModel treeLotCoordinator) {
@@ -135,19 +140,13 @@ public class TreeLotCoordinatorView extends View {
 			myModel.stateChangeRequest("OpenSession", null);
 		});
 		
-		/**
-		 * Action Events for Sell Tree, Open Shift & Close Shift
-		 * We don't need these yet
 		sellTree.setOnAction(e -> {
 			myModel.stateChangeRequest("SellTree", null);
 		});
 		
-		
-		
 		closeShift.setOnAction(e -> {
-			myModel.stateChangeRequest("CloseShift", null);
+			myModel.stateChangeRequest("CloseSession", null);
 		});
-		*/
 		
 		////////////////////////////////////////////////////
 		TitledPane scoutPane = new TitledPane();
@@ -197,13 +196,16 @@ public class TreeLotCoordinatorView extends View {
 		other.setPadding(new Insets(0, 10, 10, 10));
 		other.getChildren().add(otherActions);
 		
-		Text sessionText = new Text(getSessionStatus());
-		sessionText.setFont(Font.font("Arial", FontWeight.MEDIUM, 15));
-		
+		myShiftLabel = new Text();
+		myShiftLabel.setFont(Font.font("Arial", FontWeight.MEDIUM, 15));
+		getSessionStatus();
+		VBox centering = new VBox();
+		centering.setAlignment(Pos.CENTER);
+		centering.getChildren().add(myShiftLabel);
 		
 		//Add all layouts to the form container
 		topRow.getChildren().addAll(sellTree, openShift, closeShift);
-		topSection.getChildren().addAll(commonActions, topRow, sessionText);
+		topSection.getChildren().addAll(commonActions, topRow, centering);
 		//topSection.getChildren().addAll(commonActions, topRow);
 		formContainer.getChildren().addAll(topSection, other);
 		
@@ -218,15 +220,18 @@ public class TreeLotCoordinatorView extends View {
 	}
 	
 	//----------------------------------------------------------
-	public String getSessionStatus() {
+	public void getSessionStatus() {
 		boolean status;
 		status = (boolean) myModel.getState("SessionStatus");
 		
 		if (status == true) {
-			return "Shift open";
+			myShiftLabel.setText(openShifts);
+			myShiftLabel.setFill(Color.BLUE);
 		}
 		else {
-			return "There are currently no open shifts";
+			myShiftLabel.setText(noOpenShifts);
+			myShiftLabel.setFill(Color.RED);
+			
 		}
 	}
 	

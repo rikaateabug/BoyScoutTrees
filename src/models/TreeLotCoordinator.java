@@ -111,7 +111,8 @@ public class TreeLotCoordinator implements IView, IModel {
 		
 		else if (key.equals("CancelTransaction") == true)
 		{
-			createAndShowTreeLotCoordinatorView();
+			//createAndShowTreeLotCoordinatorView();
+			createAndShowModifiedTreeLotCoordinatorView();
 		}
 		
 		else if (key.equals("UpdateTreeLotCoordinator") == true) {
@@ -140,6 +141,16 @@ public class TreeLotCoordinator implements IView, IModel {
 			doTransaction(transType);
 		}
 		
+		else if ((key.equals("SellTree"))) {
+			String transType = key;
+				if (activeSession == true) {
+					doTransaction(transType);
+				}
+				else {
+					//show error
+				}
+		}
+		
 		else if ((key.equals("AddTreeType")) || (key.equals("UpdateTreeType"))) {
 			String transType = key;
 			doTransaction(transType);
@@ -148,6 +159,18 @@ public class TreeLotCoordinator implements IView, IModel {
 			String transType = key;
 			
 			if (activeSession == false) {
+				doTransaction(transType);
+			}
+			else {
+				//There is an active session, give an error
+			}
+		}
+		
+		else if (key.equals("CloseSession")) {
+			
+			String transType = key;
+			
+			if (activeSession == true) {
 				doTransaction(transType);
 			}
 			else {
@@ -164,9 +187,9 @@ public class TreeLotCoordinator implements IView, IModel {
 		try {
 			Transaction trans = TransactionFactory.createTransaction(transType, myLocale);
 			trans.subscribe("CancelTransaction", this);
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			trans.subscribe("UpdateTreeLotCoordinator", this);
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//trans.subscribe("SetTLCSession", this);
+			System.out.println("I got here");
 			trans.stateChangeRequest("DoYourJob", "");
 			 
 		} catch (Exception ex) {

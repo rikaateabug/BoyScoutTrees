@@ -15,7 +15,7 @@ public class TransactionFactory {
 		}
 
 		else if ((transType.equals("AddTree")) || (transType.equals("UpdateTree"))
-				|| (transType.equals("RemoveTree"))) {
+				|| (transType.equals("RemoveTree")) || (transType.equals("SellTree"))) {
 			 trans = new TreeTransaction(transType, myLocale);
 		}
 
@@ -24,7 +24,11 @@ public class TransactionFactory {
 		}
 		
 		else if (transType.equals("OpenSession")) {
-			trans = new SessionTransaction(myLocale);
+			trans = new SessionTransaction(transType, myLocale);
+		}
+		
+		else if (transType.equals("CloseSession")) {
+			trans = new SessionTransaction(transType, myLocale);
 		}
 		
 		

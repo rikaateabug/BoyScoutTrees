@@ -139,7 +139,7 @@ public class ScoutCollectionView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setWrappingWidth(300);
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKGREEN);
@@ -267,6 +267,7 @@ public class ScoutCollectionView extends View {
 		prompt.setWrappingWidth(350);
 		prompt.setTextAlignment(TextAlignment.CENTER);
 		prompt.setFill(Color.BLACK);
+		prompt.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
 		grid.add(prompt, 0, 0, 2, 1);
 
 		tableOfScouts = new TableView<ScoutTableModel>();
@@ -337,7 +338,7 @@ public class ScoutCollectionView extends View {
 		tableOfScouts.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
 		ScrollPane scrollPane = new ScrollPane();
-		scrollPane.setPrefSize(800, 300);
+		scrollPane.setPrefSize(500, 300);
 		scrollPane.setContent(tableOfScouts);
 
 		HBox btnContainer = new HBox(30);

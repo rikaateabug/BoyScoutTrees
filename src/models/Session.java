@@ -194,6 +194,32 @@ public class Session extends EntityBase implements IView {
 	}
 
 	// ------------------------------------------------------
+	public String getOpenSessionID() throws InvalidPrimaryKeyException {
+
+		String query = "SELECT * FROM " + myTableName + " WHERE (endTime IS NULL)";
+		Vector allDataRetrieved = getSelectQueryResult(query);
+
+		// You must get one session at least
+		if (allDataRetrieved != null) {
+			int size = allDataRetrieved.size();
+
+			// There should be EXACTLY one session. More than that is an error
+			if (size != 1) {
+				throw new InvalidPrimaryKeyException("Multiple sessions found.");
+			} else {
+				// copy all the retrieved data into persistent state
+				Properties retrievedAccountData = (Properties) allDataRetrieved.elementAt(0);
+				return retrievedAccountData.getProperty("sessionID");
+
+			}
+		}
+		// If no session found for this user name, throw an exception
+		else {
+			throw new InvalidPrimaryKeyException("No session  found.");
+		}
+	}
+	
+	// ------------------------------------------------------
 	public void deleteStateInDatabase() {
 		try {
 			Integer status = deletePersistentState(mySchema, persistentState);

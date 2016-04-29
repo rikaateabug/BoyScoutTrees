@@ -206,7 +206,58 @@ public class TreeType extends EntityBase implements IView {
 		}
 	}
 
+	// ----------------------------------------------------------
+	public String getTreeType(String barcodePrefix) throws InvalidPrimaryKeyException {
 
+		String query = "SELECT * FROM " + myTableName + " WHERE (barcodePrefix=" + barcodePrefix + ")";
+
+		Vector allDataRetrieved = getSelectQueryResult(query);
+
+		// You must get one treeType at least
+		if (allDataRetrieved != null) {
+			int size = allDataRetrieved.size();
+			// There should be EXACTLY one TreeType. More than that is an error
+			if (size != 1) {
+				throw new InvalidPrimaryKeyException(
+						"Multiple accounts matching the barcode prefix : " + barcodePrefix + " found.");
+			} else {
+				// copy all the retrieved data into persistent state
+				Properties retrievedAccountData = (Properties) allDataRetrieved.elementAt(0);
+				return retrievedAccountData.getProperty("typeDescription");
+			}
+		}
+		// If no TreeType found for this treeTypeID, throw an exception
+		else {
+			throw new InvalidPrimaryKeyException("No tree Type matching barcode prefix : " + barcodePrefix + " found.");
+		}
+	}
+
+	// ----------------------------------------------------------
+	public String getTreeTypeCost(String barcodePrefix) throws InvalidPrimaryKeyException {
+
+		String query = "SELECT * FROM " + myTableName + " WHERE (barcodePrefix=" + barcodePrefix + ")";
+
+		Vector allDataRetrieved = getSelectQueryResult(query);
+
+		// You must get one treeType at least
+		if (allDataRetrieved != null) {
+			int size = allDataRetrieved.size();
+			// There should be EXACTLY one TreeType. More than that is an error
+			if (size != 1) {
+				throw new InvalidPrimaryKeyException(
+						"Multiple accounts matching the barcode prefix : " + barcodePrefix + " found.");
+			} else {
+				// copy all the retrieved data into persistent state
+				Properties retrievedAccountData = (Properties) allDataRetrieved.elementAt(0);
+				return retrievedAccountData.getProperty("cost");
+			}
+		}
+		// If no TreeType found for this treeTypeID, throw an exception
+		else {
+			throw new InvalidPrimaryKeyException("No tree Type matching barcode prefix : " + barcodePrefix + " found.");
+		}
+	}
+	
 	// ------------------------------------------------------
 	public String toString() {
 		String s = persistentState.getProperty("typeDescription") + " \t" + 

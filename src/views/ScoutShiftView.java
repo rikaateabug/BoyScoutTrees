@@ -645,7 +645,8 @@ public class ScoutShiftView extends View {
 		}
 		
 		myModel.stateChangeRequest("insertShifts", shiftList);
-		
+		//Show Message
+		myModel.stateChangeRequest("UpdateTLC", null);
 	}
 	
 	

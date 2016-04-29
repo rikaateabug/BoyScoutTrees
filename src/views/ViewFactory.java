@@ -87,6 +87,11 @@ public class ViewFactory {
 			return new SellTreeView(model);
 		}
 		
+		else if (viewName.equals("CloseSessionView") == true)
+		{
+			return new CloseSessionView(model);
+		}
+		
 		else
 			return null;
 	}

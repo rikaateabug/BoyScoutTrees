@@ -6,8 +6,10 @@ import java.util.Properties;
 import exception.InvalidPrimaryKeyException;
 import impresario.IView;
 import javafx.scene.Scene;
+import models.Sale;
 import models.Scout;
 import models.ScoutCollection;
+import models.Session;
 import models.Tree;
 import views.AddScoutView;
 import views.AddTreeView;
@@ -59,7 +61,7 @@ public class TreeTransaction extends Transaction {
 		}
 
 		else if (transType.equals("UpdateTree")
-				|| (transType.equals("RemoveTree"))) {
+				|| (transType.equals("RemoveTree")) || (transType.equals("SellTree"))) {
 			Scene currentScene = myViews.get("SearchTreeBarcodeView");
 
 			if (currentScene == null) {
@@ -105,6 +107,20 @@ public class TreeTransaction extends Transaction {
 	}
 
 	// ----------------------------------------------------------
+	protected Scene createSellTreeView() {
+		Scene currentScene = myViews.get("SellTreeView");
+
+		if (currentScene == null) {
+			View newView = ViewFactory.createView("SellTreeView", this);
+			currentScene = new Scene(newView);
+			myViews.put("SellTreeView", currentScene);
+			return currentScene;
+		} else {
+			return currentScene;
+		}
+	}
+	
+	// ----------------------------------------------------------
 	public Object getState(String key) {
 		if (key.equals("Locale")) {
 			return myLocale;
@@ -142,6 +158,29 @@ public class TreeTransaction extends Transaction {
 			myTree.deleteTree();
 		}
 
+		else if (key.equals("soldTree")) {
+			Properties myProps = (Properties) value;
+			Session sess = new Session();
+			String mySessionID;
+			try {
+				mySessionID = sess.getOpenSessionID();
+				System.out.println("My session id is " + mySessionID);
+				myProps.setProperty("sessionID", mySessionID);
+			} catch (InvalidPrimaryKeyException e1) {
+				e1.printStackTrace();
+			}
+			
+			Sale mySale = new Sale(myProps);
+			mySale.insertNewSale();
+			try {
+				Tree tempTree = new Tree(myProps.getProperty("barcode"));
+				tempTree.setSold();
+				tempTree.updateStateInDatabase();
+			} catch (InvalidPrimaryKeyException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		else if (key.equals("showView")) {
 			
 			if (transType.equals("RemoveTree")) {
@@ -161,6 +200,16 @@ public class TreeTransaction extends Transaction {
 					e1.printStackTrace();
 				}
 			}
+			
+			if (transType.equals("SellTree")) {
+				try {
+					myTree = new Tree((String) value);
+					swapToView(createSellTreeView());
+				} catch (InvalidPrimaryKeyException e1) {
+					e1.printStackTrace();
+				}
+			}
+			
 		}
 		myRegistry.updateSubscribers(key, this);
 	}

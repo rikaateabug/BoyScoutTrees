@@ -98,8 +98,15 @@ public class Sale extends EntityBase implements IView {
 		}
 	}
 	
-	
-	
+	// ------------------------------------------------------
+	public void insertNewSale() {
+		try {
+			Integer i = insertAutoIncrementalPersistentState(mySchema, persistentState);
+			System.out.println(i + " is the primary key of the new sale");
+		} catch (SQLException e) {
+			System.out.println("Error inserting new sale into the database" + e.toString());
+		}
+	}	
 	
 	// ------------------------------------------------------
 	public Object getState(String key) {
