@@ -76,7 +76,7 @@ public class SellTreeView extends View {
 	protected final String submitButtonLabel = new String(myResourceBundle.getString("submitButtonLabel"));
 	protected final String invalidCostErrorMessage = new String(myResourceBundle.getString("invalidCostErrorMessage"));
 	protected final String nullFieldErrorMessage = new String(myResourceBundle.getString("nullFieldErrorMessage"));
-	 
+	//protected final String requiredFieldsLabel = new String(myResourceBundle.getString("requiredFieldsLabel"));	 
 	
 	protected TextField treeBarcode;
 	protected TextField custName;
@@ -87,6 +87,10 @@ public class SellTreeView extends View {
 	protected RadioButton cash;
 	protected RadioButton check;
 	protected TextArea notes;
+	final ToggleGroup group = new ToggleGroup();
+	Text cLabel2 = new Text(customerNameLabel);
+	Text balLabel3 = new Text(phoneNumberLabel);
+	Text requiredField;
 	
 	protected Button submitButton;
 	protected Button cancelButton;
@@ -206,32 +210,32 @@ public class SellTreeView extends View {
 		balLabel1.setTextAlignment(TextAlignment.RIGHT);
 		grid.add(balLabel1, 0, 4);
 		
-		final ToggleGroup group = new ToggleGroup();
+		
 		cash = new RadioButton(cashLabel);
 		cash.setToggleGroup(group);
 		//cash.setSelected(true);
 
 		check = new RadioButton(checkLabel);
 		check.setToggleGroup(group);
-		/**
+		
 		group.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
 			public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
 				if (group.getSelectedToggle() != null) {
 					if (group.getSelectedToggle().equals(cash)) {
-						custName.setText(optionalLabel);
-						custPhone.setText(optionalLabel);
-						custEmail.setText(optionalLabel);
+						cLabel2.setText(customerNameLabel);
+						balLabel3.setText(phoneNumberLabel);
+						requiredField.setVisible(false);
 					}
 
 					else if (group.getSelectedToggle().equals(check)) {
-						custName.setText(requiredLabel);
-						custPhone.setText(requiredLabel);
-						custEmail.setText(optionalLabel);
+						cLabel2.setText(customerNameLabel + "*");
+						balLabel3.setText(phoneNumberLabel + "*");
+						requiredField.setVisible(true);
 					}
 				}
 			}
 		});
-		*/
+		
 		HBox cashCheckRow = new HBox(10);
 		//custDateRow.setAlignment(Pos.CENTER_LEFT);
 		cashCheckRow.getChildren().addAll(cash, check);
@@ -257,7 +261,7 @@ public class SellTreeView extends View {
 		
 		
 		
-		Text cLabel2 = new Text(customerNameLabel);
+		cLabel2 = new Text(customerNameLabel);
 		cLabel2.setFont(myFont);
 		//cLabel2.setWrappingWidth(100);
 		cLabel2.setTextAlignment(TextAlignment.RIGHT);
@@ -267,7 +271,7 @@ public class SellTreeView extends View {
 		custName.setEditable(true);
 		grid2.add(custName, 1, 1);
 		// -------------------------------------------------------------
-		Text balLabel3 = new Text(phoneNumberLabel);
+		balLabel3 = new Text(phoneNumberLabel);
 		balLabel3.setFont(myFont);
 		//balLabel3.setWrappingWidth(100);
 		balLabel3.setTextAlignment(TextAlignment.RIGHT);
@@ -299,8 +303,11 @@ public class SellTreeView extends View {
 		grid2.add(custEmail, 1, 3);
 		*/		
 		
-		
-		
+		requiredField = new Text("*requiredFieldsLabel");
+		requiredField.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+		//requiredField.setFill(Color.RED);
+		requiredField.setVisible(false);
+		grid2.add(requiredField, 0, 4);
 		// -------------------------------------------------------------
 		
 		HBox doneCont = new HBox(10);
@@ -343,6 +350,16 @@ public class SellTreeView extends View {
 		return vbox;
 	}
 
+	// -------------------------------------------------------------
+	public void toggleRequired(boolean required) {
+		if (required == true) {
+			balLabel3 = new Text(phoneNumberLabel);
+		}
+		else {
+			
+		}
+	}
+	
 	// Create the status log field
 	// -------------------------------------------------------------
 	protected MessageView createStatusLog(String initialMessage) {
@@ -378,12 +395,12 @@ public class SellTreeView extends View {
 			}
 		}
 		
-		else {
+		
 			Properties p = setPropertiesObject();
 			myModel.stateChangeRequest("soldTree", p);
 	//		statusLog.displayMessage(addSuccessMessage);
 			myModel.stateChangeRequest("CancelAddScout", null);
-		}
+		
 	}
 
 	// ----------------------------------------------------------
@@ -391,15 +408,17 @@ public class SellTreeView extends View {
 		Properties props = new Properties();
 		
 		props.setProperty("transactionType", "Tree Sale");
-		
-		
 		props.setProperty("barcode", (String)myTree.getState("barcode"));
 		props.setProperty("transactionAmount", salePrice.getText());
 		
-		if (check.isSelected() == true)
-			props.setProperty("paymentMethod", checkLabel);
-		else
+		if (group.getSelectedToggle().equals(cash)) {
+			System.out.println("Cash was selected");
 			props.setProperty("paymentMethod", cashLabel);
+		}
+		else {
+			System.out.println("Check was selected");
+			props.setProperty("paymentMethod", checkLabel);
+		}
 		
 		if (!(custName.getText().isEmpty())) {
 			props.setProperty("customerName", custName.getText());
