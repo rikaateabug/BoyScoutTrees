@@ -65,7 +65,7 @@ public class SessionTransaction extends Transaction {
 			
 			setSession();
 			Scene currentScene = myViews.get("CloseSessionView");
-			System.out.println("I got here");
+			//System.out.println("I got here");
 			if (currentScene == null) {
 				View newView = ViewFactory.createView("CloseSessionView", this);
 				currentScene = new Scene(newView);

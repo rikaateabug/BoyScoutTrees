@@ -8,7 +8,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -17,6 +19,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -76,6 +79,8 @@ public class SellTreeView extends View {
 	protected final String submitButtonLabel = new String(myResourceBundle.getString("submitButtonLabel"));
 	protected final String invalidCostErrorMessage = new String(myResourceBundle.getString("invalidCostErrorMessage"));
 	protected final String nullFieldErrorMessage = new String(myResourceBundle.getString("nullFieldErrorMessage"));
+	protected final String successLabel = new String(myResourceBundle.getString("successLabel"));
+	
 	//protected final String requiredFieldsLabel = new String(myResourceBundle.getString("requiredFieldsLabel"));	 
 	
 	protected TextField treeBarcode;
@@ -303,7 +308,7 @@ public class SellTreeView extends View {
 		grid2.add(custEmail, 1, 3);
 		*/		
 		
-		requiredField = new Text("*requiredFieldsLabel");
+		requiredField = new Text(requiredLabel);
 		requiredField.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
 		//requiredField.setFill(Color.RED);
 		requiredField.setVisible(false);
@@ -399,8 +404,7 @@ public class SellTreeView extends View {
 			Properties p = setPropertiesObject();
 			myModel.stateChangeRequest("soldTree", p);
 	//		statusLog.displayMessage(addSuccessMessage);
-			myModel.stateChangeRequest("CancelAddScout", null);
-		
+			showConfirmationMessage();
 	}
 
 	// ----------------------------------------------------------
@@ -412,11 +416,11 @@ public class SellTreeView extends View {
 		props.setProperty("transactionAmount", salePrice.getText());
 		
 		if (group.getSelectedToggle().equals(cash)) {
-			System.out.println("Cash was selected");
+			//System.out.println("Cash was selected");
 			props.setProperty("paymentMethod", cashLabel);
 		}
 		else {
-			System.out.println("Check was selected");
+			//System.out.println("Check was selected");
 			props.setProperty("paymentMethod", checkLabel);
 		}
 		
@@ -446,7 +450,19 @@ public class SellTreeView extends View {
 		return props;
 	}
 
-	
+	// -------------------------------------------------------------
+	public void showConfirmationMessage() {
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setHeaderText(null);
+		alert.setContentText(successLabel);
+
+		alert.showAndWait().ifPresent(response -> {
+			if (response == ButtonType.OK) {
+				alert.close();
+				myModel.stateChangeRequest("CancelAddScout", null);
+			}
+		});
+	}
 	// ----------------------------------------------------------
 	public void displayErrorMessage(String message) {
 		statusLog.displayErrorMessage(message);

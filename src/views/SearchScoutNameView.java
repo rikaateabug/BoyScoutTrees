@@ -92,7 +92,7 @@ public class SearchScoutNameView extends View {
 		VBox myVbox = new VBox(15);
 		myVbox.setAlignment(Pos.CENTER);
 		Text titleText = new Text(titleTextLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		myVbox.getChildren().add(titleText);
@@ -112,8 +112,11 @@ public class SearchScoutNameView extends View {
 		grid.setVgap(10);
 		grid.setPadding(new Insets(25, 25, 25, 25));
 
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 15);
 		Text firstNameL = new Text(firstNameLabel);
+		firstNameL.setFont(myFont);
 		Text lastNameL = new Text(lastNameLabel);
+		lastNameL.setFont(myFont);
 		grid.add(firstNameL, 0, 0);
 		
 		firstName = new TextField();
@@ -128,7 +131,10 @@ public class SearchScoutNameView extends View {
 		HBox buttons = new HBox(20);
 		buttons.setAlignment(Pos.CENTER);
 		submitButton = new Button(submitButtonLabel);
+		submitButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
+		
 		cancelButton = new Button(cancelButtonLabel);
+		cancelButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		buttons.getChildren().addAll(submitButton, cancelButton);
 		
 		cancelButton.setOnAction(new EventHandler<ActionEvent>() {

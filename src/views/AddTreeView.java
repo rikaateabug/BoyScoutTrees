@@ -98,8 +98,7 @@ public class AddTreeView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-		titleText.setWrappingWidth(300);
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		container.getChildren().add(titleText);
@@ -119,7 +118,7 @@ public class AddTreeView extends View {
 		grid.setPadding(new Insets(25, 25, 25, 0));
 
 		Text accNumLabel = new Text(barcodeLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		accNumLabel.setFont(myFont);
 		accNumLabel.setWrappingWidth(150);
 		accNumLabel.setTextAlignment(TextAlignment.RIGHT);

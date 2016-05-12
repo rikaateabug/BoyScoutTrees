@@ -147,7 +147,7 @@ public class TreeLotCoordinator implements IView, IModel {
 					doTransaction(transType);
 				}
 				else {
-					//show error
+				
 				}
 		}
 		
@@ -189,7 +189,7 @@ public class TreeLotCoordinator implements IView, IModel {
 			trans.subscribe("CancelTransaction", this);
 			trans.subscribe("UpdateTreeLotCoordinator", this);
 			//trans.subscribe("SetTLCSession", this);
-			System.out.println("I got here");
+			//System.out.println("I got here");
 			trans.stateChangeRequest("DoYourJob", "");
 			 
 		} catch (Exception ex) {

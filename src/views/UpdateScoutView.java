@@ -7,11 +7,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -33,6 +36,7 @@ import java.awt.Shape;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 import javax.swing.text.BadLocationException;
@@ -90,6 +94,7 @@ public class UpdateScoutView extends View {
 	protected MessageView statusLog;
 	protected Scout myScout;
 	protected ScoutTransaction myTrans;
+	protected Locale myLocale;
 
 	// constructor for this class -- takes a model object
 	// ----------------------------------------------------------
@@ -98,6 +103,7 @@ public class UpdateScoutView extends View {
 
 		myTrans = (ScoutTransaction) scoutTrans;
 		myScout = (Scout) scoutTrans.getState("Scout");
+		myLocale = (Locale)myModel.getState("Locale");
 		// create a container for showing the contents
 		VBox container = new VBox(10);
 		container.setPadding(new Insets(15, 5, 5, 5));
@@ -123,8 +129,7 @@ public class UpdateScoutView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-		titleText.setWrappingWidth(300);
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		container.getChildren().add(titleText);
@@ -144,7 +149,7 @@ public class UpdateScoutView extends View {
 		grid.setPadding(new Insets(25, 25, 25, 25));
 		// -------------------------------------------------------------
 		Text scoutLabel = new Text(scoutIDLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		scoutLabel.setFont(myFont);
 		scoutLabel.setWrappingWidth(150);
 		scoutLabel.setTextAlignment(TextAlignment.RIGHT);
@@ -272,13 +277,12 @@ public class UpdateScoutView extends View {
 		HBox doneCont = new HBox(20);
 		doneCont.setAlignment(Pos.CENTER);
 		submitButton = new Button(submitButtonLabel);
-		submitButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-
+		submitButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 
 		doneCont.getChildren().add(submitButton);
 
 		doneButton = new Button(doneButtonLabel);
-		doneButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+		doneButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		
 		// -------------------------------------------------------------
 		doneButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -322,49 +326,81 @@ public class UpdateScoutView extends View {
 		if (firstName.getText().isEmpty()) {
 			statusLog.displayErrorMessage(nullFieldErrorMessage);
 			firstName.requestFocus();
+			return;
 		}
 		
-		else if (middleName.getText().isEmpty()) {
+		if (middleName.getText().isEmpty()) {
 			statusLog.displayErrorMessage(nullFieldErrorMessage);
 			middleName.requestFocus();
+			return;
 		}
 		
-		else if (lastName.getText().isEmpty()) {
+		if (lastName.getText().isEmpty()) {
 			statusLog.displayErrorMessage(nullFieldErrorMessage);
 			lastName.requestFocus();
+			return;
 		}
 
-		else if (dateOfBirth.getText().isEmpty()) {
+		if (dateOfBirth.getText().isEmpty()) {
 			System.out.println("Date of birth is null");
 			statusLog.displayErrorMessage(nullFieldErrorMessage);
 			dateOfBirth.requestFocus();
+			return;
 		}
 
-		else if (!(dateOfBirth.getText().matches("\\d{4}-\\d{2}-\\d{2}"))) {
+		
+		if (!(dateOfBirth.getText().matches("\\d{2}-\\d{2}-\\d{4}"))) {
 			displayErrorMessage(invalidDateFormatMessage);
 			dateOfBirth.requestFocus();
-		}
-
-		else if (phoneNumber.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			phoneNumber.requestFocus();
-		}
-
-		else if (email.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			email.requestFocus();
-		}
-
-		else if (troopID.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			troopID.requestFocus();
+			return;
 		}
 		
-		else {
-			Properties p = setPropertiesObject();
-			myTrans.stateChangeRequest("UpdateAScout", p);
-			statusLog.displayMessage(updateSuccessMessage);
+		if (phoneNumber.getText().isEmpty()) {
+			statusLog.displayErrorMessage(nullFieldErrorMessage);
+			phoneNumber.requestFocus();
+			return;
 		}
+
+		if (myLocale.toString().equals("en_US")) {
+			if (!(phoneNumber.getText().matches("\\d{3}-\\d{7}"))) {
+				displayErrorMessage(invalidDateFormatMessage);
+				phoneNumber.requestFocus();
+				return;
+			}
+		}
+		
+		if (myLocale.toString().equals("fr_FR")) {
+			if (!(phoneNumber.getText().matches("\\d{11}"))) {
+				displayErrorMessage(invalidDateFormatMessage);
+				phoneNumber.requestFocus();
+				return;
+			}
+		}
+		
+		if (email.getText().isEmpty()) {
+			statusLog.displayErrorMessage(nullFieldErrorMessage);
+			email.requestFocus();
+			return;
+		}
+
+		if (troopID.getText().isEmpty()) {
+			statusLog.displayErrorMessage(nullFieldErrorMessage);
+			troopID.requestFocus();
+			return;
+		}
+		
+		Properties p = setPropertiesObject();
+		myTrans.stateChangeRequest("UpdateAScout", p);
+		
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setContentText(updateSuccessMessage);
+
+		alert.showAndWait().ifPresent(response -> {
+		     if (response == ButtonType.OK) {
+		    	 myModel.stateChangeRequest("CancelAddScout", null);
+		     }
+		 });
+
 	}
 
 	// ----------------------------------------------------------
@@ -386,6 +422,7 @@ public class UpdateScoutView extends View {
 		return props;
 	}
 
+	
 	// ----------------------------------------------------------
 	public void displayErrorMessage(String message) {
 		statusLog.displayErrorMessage(message);

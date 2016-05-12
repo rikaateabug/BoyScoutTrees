@@ -70,9 +70,6 @@ public class WelcomeView extends View {
 		container.getChildren().add(createStatusLog("                          "));
 
 		getChildren().add(container);
-
-		// STEP 0: Be sure you tell your model what keys you are interested in
-		myModel.subscribe("LoginError", this);
 	}
 
 
@@ -81,14 +78,14 @@ public class WelcomeView extends View {
 
 		VBox title = new VBox(15);
 		title.setAlignment(Pos.CENTER);
-		title.setPadding(new Insets(25, 25, 25, 25));
+		title.setPadding(new Insets(50, 25, 25, 25));
 
 		Text titleText = new Text(english);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		Text titleTextfr = new Text(french);
-		titleTextfr.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleTextfr.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleTextfr.setTextAlignment(TextAlignment.CENTER);
 		titleTextfr.setFill(Color.DARKOLIVEGREEN);
 		
@@ -98,31 +95,28 @@ public class WelcomeView extends View {
 	}
 	// Create the main form contents
 	// -------------------------------------------------------------
-	private GridPane createFormContents() {
-		GridPane grid = new GridPane();
-		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(10);
-		grid.setVgap(10);
-		grid.setPadding(new Insets(25, 25, 25, 25));
-
+	private HBox createFormContents() {
+		
+		HBox hbox = new HBox(30);
+		hbox.setPadding(new Insets(50, 25, 100, 25));
+		hbox.setAlignment(Pos.CENTER);
+		
 		englishButton = new Button("English");
-
+		englishButton.setStyle("-fx-font: 22 arial;");
 		
 		englishButton.setOnAction(e -> {	
 			myModel.stateChangeRequest("SetLocale", "English");
 		});
 		
-		grid.add(englishButton, 0, 0);
-
 		frenchButton = new Button("Francais");
-		
+		frenchButton.setStyle("-fx-font: 22 arial;");
 		frenchButton.setOnAction(e -> {	
 			myModel.stateChangeRequest("SetLocale", "French");
 		});
 		
-		grid.add(frenchButton, 0, 3);
-
-		return grid;
+		hbox.getChildren().addAll(englishButton, frenchButton);
+		
+		return hbox;
 	}
 
 	// Create the status log field

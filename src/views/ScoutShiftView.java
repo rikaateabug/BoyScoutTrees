@@ -8,7 +8,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -41,6 +44,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 import javax.swing.text.BadLocationException;
@@ -77,50 +81,26 @@ public class ScoutShiftView extends View {
 	
 	protected final String invalidTimeErrorMessage = new String(myResourceBundle.getString("invalidTimeErrorMessage"));
 	protected final String nullFieldErrorMessage = new String(myResourceBundle.getString("nullFieldErrorMessage"));
-	
+	protected final String successLabel = new String(myResourceBundle.getString("successLabel"));
+
 	
 	
 	// ----------------------------------------------------------
-	protected TextField scoutName1;
-	protected TextField startTime1;
-	protected TextField endTime1;
-	protected TextField companionName1;
-	protected TextField companionHours1;
-	
-	protected TextField scoutName2;
-	protected TextField startTime2;
-	protected TextField endTime2;
-	protected TextField companionName2;
-	protected TextField companionHours2;
-	
-	protected TextField scoutName3;
-	protected TextField startTime3;
-	protected TextField endTime3;
-	protected TextField companionName3;
-	protected TextField companionHours3;
-	
-	protected TextField scoutName4;
-	protected TextField startTime4;
-	protected TextField endTime4;
-	protected TextField companionName4;
-	protected TextField companionHours4;
-	
-	
 	protected Text prompt;
-	
 	protected Button submitButton;
 	protected Button cancelButton;
-
 	protected ScoutCollection myScoutCollection;
-	private int pos;
 	private final int collectionSize;
 	private ArrayList<Properties> shiftList = new ArrayList<Properties>();
 	private Session mySession;
 	protected MessageView statusLog;
+	private Locale myLocale;
 	
-	private boolean section2 = false;
-	private boolean section3 = false;
-	private boolean section4 = false;
+	private Section section1;
+	private Section section2;
+	private Section section3;
+	private Section section4;
+	
 	
 	// constructor for this class -- takes a model object
 	// ----------------------------------------------------------
@@ -130,12 +110,15 @@ public class ScoutShiftView extends View {
 		myScoutCollection = (ScoutCollection)myModel.getState("ScoutCollection");
 		collectionSize = myScoutCollection.size();
 		
-		if (collectionSize >= 2)
-			section2 = true;
-		if (collectionSize >= 3)
-			section3 = true;
-		if (collectionSize == 4)
-			section4 = true;
+		//Check if the locale is US to see whether am/pm is needed
+		myLocale = (Locale) myModel.getState("Locale");
+		boolean amPm;
+		if (myLocale.toString().equals("en_US")) {
+			amPm = true;
+		}
+		else {
+			amPm = false;
+		}
 		
 		// create a container for showing the contents
 		VBox container = new VBox(10);
@@ -145,31 +128,39 @@ public class ScoutShiftView extends View {
 		container.getChildren().add(createTitle());
 
 		// create our GUI components, add them to this Container
-		VBox scrollC = new VBox(10);
-		//scrollC.setAlignment(Pos.CENTER_LEFT);
-		scrollC.getChildren().add(createFormContent1());
+		VBox mySections = new VBox(10);
 		
-		if (section2 == true)
-			scrollC.getChildren().add(createFormContent2());
+		mySections.setPadding(new Insets(20, 5, 20, 5));
 		
-		if (section3 == true)
-			scrollC.getChildren().add(createFormContent3());
+		section1 = new Section(true, 0, amPm);
 		
-		if (section4 == true)
-			scrollC.getChildren().add(createFormContent4());
+		if (collectionSize >= 2)
+			section2 = new Section(true, 1, amPm);
+		else
+			section2 = new Section(false, 1, amPm);
 		
-		ScrollPane scrollPane = new ScrollPane();
-		scrollPane.setPrefSize(500, 500);
-		scrollPane.setVbarPolicy(ScrollBarPolicy.ALWAYS);
-		scrollPane.setContent(scrollC);
+		if (collectionSize >= 3)
+			section3 = new Section(true, 2, amPm);
+		else
+			section3 = new Section(false, 2, amPm);
+		
+		if (collectionSize == 4)
+			section4 = new Section(true, 3, amPm);
+		else
+			section4 = new Section(false, 3, amPm);
 		
 		
-		container.getChildren().add(scrollPane);
+		mySections.getChildren().add(section1.getVBox());
+		mySections.getChildren().add(section2.getVBox());
+		mySections.getChildren().add(section3.getVBox());
+		mySections.getChildren().add(section4.getVBox());
+		
+		container.getChildren().add(mySections);
+		
 		container.getChildren().add(createButtons());
-		container.getChildren().add(createStatusLog(" "));
+		
 		getChildren().add(container);
 
-		// populateFields();
 	}
 
 	// Create the title container
@@ -177,12 +168,12 @@ public class ScoutShiftView extends View {
 	private Node createTitle() {
 		HBox container = new HBox();
 		container.setAlignment(Pos.CENTER);
-		container.setPadding(new Insets(20, 5, 5, 5));
+		container.setPadding(new Insets(20, 10, 30, 10));
 		
 		
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-		titleText.setWrappingWidth(300);
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+		//titleText.setWrappingWidth(300);
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		container.getChildren().add(titleText);
@@ -190,384 +181,269 @@ public class ScoutShiftView extends View {
 		return container;
 	}
 
-	// Create the main form content
 	// -------------------------------------------------------------
-	private VBox createFormContent1() {
-		VBox vbox = new VBox(10);
-		vbox.setPadding(new Insets(0, 25, 0, 25));
-		vbox.setAlignment(Pos.CENTER);
+	// Inner Section Class, used for this view
+	public class Section {
+		//instance variables
+		private TextField scoutName;
+		private TextField startTime;
+		private TextField endTime;
+		private TextField companionName;
+		private TextField companionHours;
+		private ComboBox<String> time1;
+		private ComboBox<String> time2;
+		private VBox myVBox;
+		private boolean created;
+		private int secPosition;
+		private boolean includeAMPM;
+		
+		// -------------------------------------------------------------
+		public Section(boolean c, int p, boolean inc) {
+			created = c;
+			secPosition = p;
+			includeAMPM = inc;
+			myVBox = createSection();
+		}
+		
+		// -------------------------------------------------------------
+		public VBox createSection() {
+			VBox vbox = new VBox(10);
+			vbox.setPadding(new Insets(0, 25, 0, 25));
+			vbox.setAlignment(Pos.CENTER);
 
-		VBox scoutSection = new VBox(10);
-		scoutSection.setPadding(new Insets(20, 120, 25, 150));
-		scoutSection.setStyle("-fx-border-color: black; -fx-border-style: hidden hidden hidden hidden;");
-		scoutSection.setAlignment(Pos.CENTER_LEFT);
+			GridPane grid = new GridPane(); 
+			grid.setPadding(new Insets(5, 25, 5, 25));
+			grid.setVgap(10);
+			//grid.setStyle("-fx-border-color: black; -fx-border-style: solid solid solid solid;");
+			
+			String style;
+			if (created == true) {
+				style = "-fx-background-color: " + "-fx-shadow-highlight-color, " + "-fx-outer-border, "
+						+ "-fx-inner-border, " + "-fx-body-color; " + "-fx-background-insets: 0 0 -1 0, 0, 1, 2; "
+						+ "-fx-background-radius: 3px, 3px, 2px, 1px;";
+			} else {
+				style = "-fx-background-color: " + "-fx-shadow-highlight-color, " + "-fx-outer-border, "
+						+ "-fx-inner-border, " + " #C7C7C7; " + "-fx-background-insets: 0 0 -1 0, 0, 1, 2; "
+						+ "-fx-background-radius: 3px, 3px, 2px, 1px;";
+			}
+			
+			grid.setStyle(style);
+			
+			// -------------------------------------------------------------
+			Text snLabel = new Text(nameLabel);
+			Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+			snLabel.setFont(myFont);
+			snLabel.setWrappingWidth(200);
+			snLabel.setTextAlignment(TextAlignment.LEFT);
+			scoutName = new TextField();
+			
+			if (created == true) {
+				Scout s = myScoutCollection.get(secPosition);
+				String fn = (String) s.getState("firstName");
+				String ln = (String) s.getState("lastName");
+				scoutName.setText(fn + " " + ln);
+			}
+			
+			scoutName.setEditable(false);
+			scoutName.setMouseTransparent(true);
+			scoutName.setFocusTraversable(false);
+			scoutName.setStyle("-fx-control-inner-background: #d3d3d3;");
+			scoutName.setPrefWidth(150);
+			scoutName.setMinWidth(150);
+			scoutName.setMaxWidth(150);
+			
+			VBox nameAndLabel = new VBox(5);
+			nameAndLabel.getChildren().addAll(snLabel, scoutName);
+			grid.add(nameAndLabel, 0, 0);
+			
+			// -------------------------------------------------------------
+			VBox spacer1 = new VBox(5);
+
+			VBox spacer2 = new VBox(5);
+			spacer2.setAlignment(Pos.CENTER_LEFT);
+
+			Text stLabel = new Text(startLabel);
+			stLabel.setFont(myFont);
+			stLabel.setWrappingWidth(200);
+			stLabel.setTextAlignment(TextAlignment.LEFT);
+			startTime = new TextField();
+			startTime.setEditable(true);
+			startTime.setPrefWidth(100);
+			startTime.setMinWidth(100);
+			startTime.setMaxWidth(100);
+
+			if (includeAMPM == true) {
+				String am = "a.m.";
+				String pm = "p.m.";
+				time1 = new ComboBox();
+				time1.getItems().addAll(am, pm);
+				time1.setValue(am);
+				HBox complicated = new HBox(5);
+				complicated.getChildren().addAll(startTime, time1);
+				spacer1.getChildren().addAll(stLabel, complicated);
+			}
+			else {
+				spacer1.getChildren().addAll(stLabel, startTime);
+			}
+			
+			grid.add(spacer1, 1, 0);
+			
+			Text etLabel = new Text(endLabel);
+			etLabel.setFont(myFont);
+			etLabel.setWrappingWidth(200);
+			etLabel.setTextAlignment(TextAlignment.LEFT);
+			endTime = new TextField();
+			endTime.setEditable(true);
+			endTime.setPrefWidth(100);
+			endTime.setMinWidth(100);
+			endTime.setMaxWidth(100);
+			
+			if (includeAMPM == true) {
+				HBox complicated2 = new HBox(5);
+				time2 = new ComboBox();
+				String am = "a.m.";
+				String pm = "p.m.";
+				time2.getItems().addAll(am, pm);
+				time2.setValue(am);
+				complicated2.getChildren().addAll(endTime, time2);
+				spacer2.getChildren().addAll(etLabel, complicated2);
+			}
+			else {
+				spacer2.getChildren().addAll(etLabel, endTime);
+			}
+
+			grid.add(spacer2, 2, 0);
+			
+			// -------------------------------------------------------------
+			VBox sectionSpacer = new VBox();
+			sectionSpacer.setPadding(new Insets(10, 0, 5, 0));
+
+			Text cnLabel = new Text(companionNameLabel);
+			cnLabel.setFont(myFont);
+			cnLabel.setWrappingWidth(200);
+			cnLabel.setTextAlignment(TextAlignment.LEFT);
+			companionName = new TextField();
+			companionName.setEditable(true);
+			companionName.setPrefWidth(150);
+			companionName.setMinWidth(150);
+			companionName.setMaxWidth(150);
+			HBox companionBox = new HBox(10);
+			VBox gosh1 = new VBox(5);
+			VBox gosh2 = new VBox(5);
+
+			gosh1.getChildren().addAll(cnLabel, companionName);
+			grid.add(gosh1, 0, 1);
+
+			// -------------------------------------------------------------
+			Text chLabel = new Text(companionHoursLabel);
+			chLabel.setFont(myFont);
+			chLabel.setWrappingWidth(200);
+			chLabel.setTextAlignment(TextAlignment.LEFT);
+			companionHours = new TextField();
+			companionHours.setEditable(true);
+			companionHours.setPrefWidth(100);
+			companionHours.setMinWidth(100);
+			companionHours.setMaxWidth(100);
+			gosh2.getChildren().addAll(chLabel, companionHours);
+
+			grid.add(gosh2, 1, 1);
+			
+			if (created == false) {
+				setFieldsNotEditable(companionName);
+				setFieldsNotEditable(companionHours);
+				setFieldsNotEditable(endTime);
+				setFieldsNotEditable(startTime);
+				
+				if (includeAMPM == true) {
+					time1.setEditable(false);
+					time1.setMouseTransparent(true);
+					time1.setFocusTraversable(false);
+					//time1.setStyle("-fx-control-inner-background: #d3d3d3;");
+					time2.setEditable(false);
+					time2.setMouseTransparent(true);
+					time2.setFocusTraversable(false);
+					//time2.setStyle("-fx-control-inner-background: #d3d3d3;");
+				}
+			}
+			
+			vbox.getChildren().add(grid);
+			return vbox;
+			
+		}
+		
+		// -------------------------------------------------------------
+		public void setFieldsNotEditable(TextField tf) {
+			tf.setEditable(false);
+			tf.setMouseTransparent(true);
+			tf.setFocusTraversable(false);
+			tf.setStyle("-fx-control-inner-background: #d3d3d3;");
+		}
+		
+		// -------------------------------------------------------------
+		public boolean validateSection() {
+
+			// Check if the fields are empty
+			if (companionName.getText().isEmpty()) {
+				//statusLog.displayErrorMessage(nullFieldErrorMessage);
+				System.out.println("No");
+				companionName.requestFocus();
+				return false;
+			}
+			else if (startTime.getText().isEmpty()) {
+				//statusLog.displayErrorMessage(nullFieldErrorMessage);
+				startTime.requestFocus();
+				return false;
+			} 
+			else if (endTime.getText().isEmpty()) {
+				//statusLog.displayErrorMessage(nullFieldErrorMessage);
+				endTime.requestFocus();
+				return false;
+			}
+
+			else if (companionHours.getText().isEmpty()) {
+				//statusLog.displayErrorMessage(nullFieldErrorMessage);
+				companionHours.requestFocus();
+				return false;
+			}
+
+			return true;
+		}
+		
+		// -------------------------------------------------------------
+		public void setProperties() {
+			Properties props = new Properties();
+			Scout s = myScoutCollection.get(secPosition);
+			props.setProperty("sessionID", (String) myModel.getState("SessionID"));
+			props.setProperty("scoutID", (String) s.getState("scoutID"));
+			props.setProperty("companionName", companionName.getText());
+			props.setProperty("startTime", startTime.getText());
+			props.setProperty("endTime", endTime.getText());
+			props.setProperty("companionHours", companionHours.getText());
+			shiftList.add(props);
+		}
 
 		// -------------------------------------------------------------
-		Text snLabel = new Text(nameLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
-		snLabel.setFont(myFont);
-		snLabel.setWrappingWidth(200);
-		snLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(snLabel, 0, 0);
-		scoutName1 = new TextField();
-		Scout s = myScoutCollection.get(0);
-		String fn = (String) s.getState("firstName");
-		String ln = (String) s.getState("lastName");
-		scoutName1.setText(fn + " " + ln);
-		scoutName1.setEditable(false);
-		scoutName1.setMouseTransparent(true);
-		scoutName1.setFocusTraversable(false);
-		scoutName1.setStyle("-fx-control-inner-background: #d3d3d3;");
-		scoutName1.setPrefWidth(150);
-		scoutName1.setMinWidth(150);
-		scoutName1.setMaxWidth(150);
-		// grid.add(scoutName1, 1, 0);
-		scoutSection.getChildren().addAll(snLabel, scoutName1);
+		public int getPos() {
+			return secPosition;
+		}
 
 		// -------------------------------------------------------------
-		Text cnLabel = new Text(companionNameLabel);
-		cnLabel.setFont(myFont);
-		cnLabel.setWrappingWidth(200);
-		cnLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(cnLabel, 0, 1);
-		companionName1 = new TextField();
-		companionName1.setEditable(true);
-		companionName1.setPrefWidth(150);
-		companionName1.setMinWidth(150);
-		companionName1.setMaxWidth(150);
-		// grid.add(companionName1, 1, 1);
-		scoutSection.getChildren().addAll(cnLabel, companionName1);
+		public boolean isCreated() {
+			return created;
+		}
 
 		// -------------------------------------------------------------
-		Text stLabel = new Text(startLabel);
-		stLabel.setFont(myFont);
-		stLabel.setWrappingWidth(200);
-		stLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(stLabel, 0, 2);
-		startTime1 = new TextField();
-		startTime1.setEditable(true);
-		startTime1.setPrefWidth(100);
-		startTime1.setMinWidth(100);
-		startTime1.setMaxWidth(100);
-		// grid.add(startTime1, 1, 2);
-		scoutSection.getChildren().addAll(stLabel, startTime1);
+		public boolean returnAmPm() {
+			return includeAMPM;
+		}
 
 		// -------------------------------------------------------------
-		Text etLabel = new Text(endLabel);
-		etLabel.setFont(myFont);
-		etLabel.setWrappingWidth(200);
-		etLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(etLabel, 0, 3);
-		endTime1 = new TextField();
-		endTime1.setEditable(true);
-		endTime1.setPrefWidth(100);
-		endTime1.setMinWidth(100);
-		endTime1.setMaxWidth(100);
-		// grid.add(endTime1, 1, 3);
-		scoutSection.getChildren().addAll(etLabel, endTime1);
-
-		// -------------------------------------------------------------
-		Text chLabel = new Text(companionHoursLabel);
-		chLabel.setFont(myFont);
-		chLabel.setWrappingWidth(200);
-		chLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(chLabel, 0, 4);
-		companionHours1 = new TextField();
-		companionHours1.setEditable(true);
-		companionHours1.setPrefWidth(100);
-		companionHours1.setMinWidth(100);
-		companionHours1.setMaxWidth(100);
-		// grid.add(companionHours1, 1, 4);
-		scoutSection.getChildren().addAll(chLabel, companionHours1);
-
-		// scoutSection.getChildren().addAll(grid);
-		vbox.getChildren().add(scoutSection);
-
-		return vbox;
+		public VBox getVBox() {
+			return myVBox;
+		}
+		
 	}
-
-	// -------------------------------------------------------------
-	private VBox createFormContent2() {
-		VBox vbox = new VBox(10);
-		vbox.setPadding(new Insets(0, 25, 0, 25));
-		vbox.setAlignment(Pos.CENTER);
-
-		VBox scoutSection = new VBox(10);
-		scoutSection.setPadding(new Insets(20, 120, 25, 150));
-		scoutSection.setStyle("-fx-border-color: black; -fx-border-style: solid hidden hidden hidden;");
-		scoutSection.setAlignment(Pos.CENTER_LEFT);
-
-		// -------------------------------------------------------------
-		Text snLabel = new Text(nameLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
-		snLabel.setFont(myFont);
-		snLabel.setWrappingWidth(200);
-		snLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(snLabel, 0, 0);
-		scoutName2 = new TextField();
-		Scout s = myScoutCollection.get(1);
-		String fn = (String) s.getState("firstName");
-		String ln = (String) s.getState("lastName");
-		scoutName2.setText(fn + " " + ln);
-		scoutName2.setEditable(false);
-		scoutName2.setMouseTransparent(true);
-		scoutName2.setFocusTraversable(false);
-		scoutName2.setStyle("-fx-control-inner-background: #d3d3d3;");
-		scoutName2.setPrefWidth(150);
-		scoutName2.setMinWidth(150);
-		scoutName2.setMaxWidth(150);
-		// grid.add(scoutName1, 1, 0);
-		scoutSection.getChildren().addAll(snLabel, scoutName2);
-
-		// -------------------------------------------------------------
-		Text cnLabel = new Text(companionNameLabel);
-		cnLabel.setFont(myFont);
-		cnLabel.setWrappingWidth(200);
-		cnLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(cnLabel, 0, 1);
-		companionName2 = new TextField();
-		companionName2.setEditable(true);
-		companionName2.setPrefWidth(150);
-		companionName2.setMinWidth(150);
-		companionName2.setMaxWidth(150);
-		// grid.add(companionName1, 1, 1);
-		scoutSection.getChildren().addAll(cnLabel, companionName2);
-
-		// -------------------------------------------------------------
-		Text stLabel = new Text(startLabel);
-		stLabel.setFont(myFont);
-		stLabel.setWrappingWidth(200);
-		stLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(stLabel, 0, 2);
-		startTime2 = new TextField();
-		startTime2.setEditable(true);
-		startTime2.setPrefWidth(100);
-		startTime2.setMinWidth(100);
-		startTime2.setMaxWidth(100);
-		// grid.add(startTime1, 1, 2);
-		scoutSection.getChildren().addAll(stLabel, startTime2);
-
-		// -------------------------------------------------------------
-		Text etLabel = new Text(endLabel);
-		etLabel.setFont(myFont);
-		etLabel.setWrappingWidth(200);
-		etLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(etLabel, 0, 3);
-		endTime2 = new TextField();
-		endTime2.setEditable(true);
-		endTime2.setPrefWidth(100);
-		endTime2.setMinWidth(100);
-		endTime2.setMaxWidth(100);
-		// grid.add(endTime1, 1, 3);
-		scoutSection.getChildren().addAll(etLabel, endTime2);
-
-		// -------------------------------------------------------------
-		Text chLabel = new Text(companionHoursLabel);
-		chLabel.setFont(myFont);
-		chLabel.setWrappingWidth(200);
-		chLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(chLabel, 0, 4);
-		companionHours2 = new TextField();
-		companionHours2.setEditable(true);
-		companionHours2.setPrefWidth(100);
-		companionHours2.setMinWidth(100);
-		companionHours2.setMaxWidth(100);
-		// grid.add(companionHours1, 1, 4);
-		scoutSection.getChildren().addAll(chLabel, companionHours2);
-
-		// scoutSection.getChildren().addAll(grid);
-		vbox.getChildren().add(scoutSection);
-
-		return vbox;
-	}// -------------------------------------------------------------
-
-	private VBox createFormContent3() {
-		VBox vbox = new VBox(10);
-		vbox.setPadding(new Insets(0, 25, 0, 25));
-		vbox.setAlignment(Pos.CENTER);
-
-		VBox scoutSection = new VBox(10);
-		scoutSection.setPadding(new Insets(20, 120, 25, 150));
-		scoutSection.setStyle("-fx-border-color: black; -fx-border-style: solid hidden hidden hidden;");
-		scoutSection.setAlignment(Pos.CENTER_LEFT);
-
-		// -------------------------------------------------------------
-		Text snLabel = new Text(nameLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
-		snLabel.setFont(myFont);
-		snLabel.setWrappingWidth(200);
-		snLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(snLabel, 0, 0);
-		scoutName3 = new TextField();
-		Scout s = myScoutCollection.get(2);
-		String fn = (String) s.getState("firstName");
-		String ln = (String) s.getState("lastName");
-		scoutName3.setText(fn + " " + ln);
-		scoutName3.setEditable(false);
-		scoutName3.setMouseTransparent(true);
-		scoutName3.setFocusTraversable(false);
-		scoutName3.setStyle("-fx-control-inner-background: #d3d3d3;");
-		scoutName3.setPrefWidth(150);
-		scoutName3.setMinWidth(150);
-		scoutName3.setMaxWidth(150);
-		// grid.add(scoutName1, 1, 0);
-		scoutSection.getChildren().addAll(snLabel, scoutName3);
-
-		// -------------------------------------------------------------
-		Text cnLabel = new Text(companionNameLabel);
-		cnLabel.setFont(myFont);
-		cnLabel.setWrappingWidth(200);
-		cnLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(cnLabel, 0, 1);
-		companionName3 = new TextField();
-		companionName3.setEditable(true);
-		companionName3.setPrefWidth(150);
-		companionName3.setMinWidth(150);
-		companionName3.setMaxWidth(150);
-		// grid.add(companionName1, 1, 1);
-		scoutSection.getChildren().addAll(cnLabel, companionName3);
-
-		// -------------------------------------------------------------
-		Text stLabel = new Text(startLabel);
-		stLabel.setFont(myFont);
-		stLabel.setWrappingWidth(200);
-		stLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(stLabel, 0, 2);
-		startTime3 = new TextField();
-		startTime3.setEditable(true);
-		startTime3.setPrefWidth(100);
-		startTime3.setMinWidth(100);
-		startTime3.setMaxWidth(100);
-		// grid.add(startTime1, 1, 2);
-		scoutSection.getChildren().addAll(stLabel, startTime3);
-
-		// -------------------------------------------------------------
-		Text etLabel = new Text(endLabel);
-		etLabel.setFont(myFont);
-		etLabel.setWrappingWidth(200);
-		etLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(etLabel, 0, 3);
-		endTime3 = new TextField();
-		endTime3.setEditable(true);
-		endTime3.setPrefWidth(100);
-		endTime3.setMinWidth(100);
-		endTime3.setMaxWidth(100);
-		// grid.add(endTime1, 1, 3);
-		scoutSection.getChildren().addAll(etLabel, endTime3);
-
-		// -------------------------------------------------------------
-		Text chLabel = new Text(companionHoursLabel);
-		chLabel.setFont(myFont);
-		chLabel.setWrappingWidth(200);
-		chLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(chLabel, 0, 4);
-		companionHours3 = new TextField();
-		companionHours3.setEditable(true);
-		companionHours3.setPrefWidth(100);
-		companionHours3.setMinWidth(100);
-		companionHours3.setMaxWidth(100);
-		// grid.add(companionHours1, 1, 4);
-		scoutSection.getChildren().addAll(chLabel, companionHours3);
-
-		// scoutSection.getChildren().addAll(grid);
-		vbox.getChildren().add(scoutSection);
-
-		return vbox;
-	}// -------------------------------------------------------------
-
-	private VBox createFormContent4() {
-		VBox vbox = new VBox(10);
-		vbox.setPadding(new Insets(0, 25, 0, 25));
-		vbox.setAlignment(Pos.CENTER);
-
-		VBox scoutSection = new VBox(10);
-		scoutSection.setPadding(new Insets(20, 120, 25, 150));
-		scoutSection.setStyle("-fx-border-color: black; -fx-border-style: solid hidden hidden hidden;");
-		scoutSection.setAlignment(Pos.CENTER_LEFT);
-
-		// -------------------------------------------------------------
-		Text snLabel = new Text(nameLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
-		snLabel.setFont(myFont);
-		snLabel.setWrappingWidth(200);
-		snLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(snLabel, 0, 0);
-		scoutName4 = new TextField();
-		Scout s = myScoutCollection.get(3);
-		String fn = (String) s.getState("firstName");
-		String ln = (String) s.getState("lastName");
-		scoutName4.setText(fn + " " + ln);
-		scoutName4.setEditable(false);
-		scoutName4.setMouseTransparent(true);
-		scoutName4.setFocusTraversable(false);
-		scoutName4.setStyle("-fx-control-inner-background: #d3d3d3;");
-		scoutName4.setPrefWidth(150);
-		scoutName4.setMinWidth(150);
-		scoutName4.setMaxWidth(150);
-		// grid.add(scoutName1, 1, 0);
-		scoutSection.getChildren().addAll(snLabel, scoutName4);
-
-		// -------------------------------------------------------------
-		Text cnLabel = new Text(companionNameLabel);
-		cnLabel.setFont(myFont);
-		cnLabel.setWrappingWidth(200);
-		cnLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(cnLabel, 0, 1);
-		companionName4 = new TextField();
-		companionName4.setEditable(true);
-		companionName4.setPrefWidth(150);
-		companionName4.setMinWidth(150);
-		companionName4.setMaxWidth(150);
-		// grid.add(companionName1, 1, 1);
-		scoutSection.getChildren().addAll(cnLabel, companionName4);
-
-		// -------------------------------------------------------------
-		Text stLabel = new Text(startLabel);
-		stLabel.setFont(myFont);
-		stLabel.setWrappingWidth(200);
-		stLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(stLabel, 0, 2);
-		startTime4 = new TextField();
-		startTime4.setEditable(true);
-		startTime4.setPrefWidth(100);
-		startTime4.setMinWidth(100);
-		startTime4.setMaxWidth(100);
-		// grid.add(startTime1, 1, 2);
-		scoutSection.getChildren().addAll(stLabel, startTime4);
-
-		// -------------------------------------------------------------
-		Text etLabel = new Text(endLabel);
-		etLabel.setFont(myFont);
-		etLabel.setWrappingWidth(200);
-		etLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(etLabel, 0, 3);
-		endTime4 = new TextField();
-		endTime4.setEditable(true);
-		endTime4.setPrefWidth(100);
-		endTime4.setMinWidth(100);
-		endTime4.setMaxWidth(100);
-		// grid.add(endTime1, 1, 3);
-		scoutSection.getChildren().addAll(etLabel, endTime4);
-
-		// -------------------------------------------------------------
-		Text chLabel = new Text(companionHoursLabel);
-		chLabel.setFont(myFont);
-		chLabel.setWrappingWidth(200);
-		chLabel.setTextAlignment(TextAlignment.LEFT);
-		// grid.add(chLabel, 0, 4);
-		companionHours4 = new TextField();
-		companionHours4.setEditable(true);
-		companionHours4.setPrefWidth(100);
-		companionHours4.setMinWidth(100);
-		companionHours4.setMaxWidth(100);
-		// grid.add(companionHours1, 1, 4);
-		scoutSection.getChildren().addAll(chLabel, companionHours4);
-
-		// scoutSection.getChildren().addAll(grid);
-		vbox.getChildren().add(scoutSection);
-
-		return vbox;
-	}	
+	
 	// -------------------------------------------------------------
 	public HBox createButtons() {
 		
@@ -605,9 +481,71 @@ public class ScoutShiftView extends View {
 		return doneCont;
 	}
 	
-	
+	// ---------------------------------------------------------
+	public void processAction(Event e) {
+		shiftList.clear();
+		
+		if (section1.validateSection() == false) {
+			return;
+		} 
+		else {
+			section1.setProperties();
+		}
+		
+		if (section2.isCreated() == true) {
+			if (section2.validateSection() == false)
+				return;
+			else
+				section2.setProperties();
+		}
+		
+		if (section3.isCreated() == true) {
+			if (section3.validateSection() == false)
+				return;
+			else
+				section3.setProperties();
+		}
+		
+		if (section4.isCreated() == true) {
+			if (section4.validateSection() == false)
+				return;
+			else
+				section4.setProperties();
+		}
+		
+		
+		//setProperties objects & Add them to shiftList
+		myModel.stateChangeRequest("insertShifts", shiftList);
+		//myModel.stateChangeRequest("UpdateTLC", null);
+		//Show Message
+		
+		Alert alert = new Alert(AlertType.INFORMATION);	//Change this to Confirmation?
+		//alert.setTitle("Information Dialog");
+		alert.setHeaderText(successLabel);
+		//alert.setContentText("I have a great message for you!");
 
-	// Create the status log field
+		Scout s;
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("Shift created with the Scouts:");
+		for (int i = 0; i < myScoutCollection.size(); i++) {
+			s = myScoutCollection.get(i);
+			String fn = (String) s.getState("firstName");
+			String ln = (String) s.getState("lastName");
+			sb.append("\n\t" + fn + " " + ln + "\n");
+			
+		}
+		
+		alert.setContentText(sb.toString());
+		
+		alert.showAndWait().ifPresent(response -> {
+		     if (response == ButtonType.OK) {
+		    	 myModel.stateChangeRequest("UpdateTLC", null);
+		     }
+		 });
+
+	}	
+
 	// -------------------------------------------------------------
 	protected MessageView createStatusLog(String initialMessage) {
 		statusLog = new MessageView(initialMessage);
@@ -615,225 +553,16 @@ public class ScoutShiftView extends View {
 		return statusLog;
 	}
 	
-	// ---------------------------------------------------------
-	public void processAction(Event e) {
-		
-		if (processAction1() == false) {
-			return;
-		}
-		setPropertiesObject1();
-		
-		if (section2 == true) {
-			if (processAction2() == false) {
-				return;
-			}
-			setPropertiesObject2();
-		}
-		
-		if (section3 == true) {
-			if (processAction3() == false) {
-				return;
-			}
-			setPropertiesObject3();
-		}
-		
-		if (section4 == true) {
-			if (processAction4() == false) {
-				return;
-			}
-			setPropertiesObject4();
-		}
-		
-		myModel.stateChangeRequest("insertShifts", shiftList);
-		//Show Message
-		myModel.stateChangeRequest("UpdateTLC", null);
-	}
-	
-	
-	// ---------------------------------------------------------
-	public boolean processAction1() {
-
-		//Check if the fields are empty 
-		if (companionName1.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionName1.requestFocus();
-			return false;
-		}
-		
-		else if (startTime1.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			startTime1.requestFocus();
-			return false;
-		}
-		else if (endTime1.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			endTime1.requestFocus();
-			return false;
-		}
-		
-		else if (companionHours1.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionHours1.requestFocus();
-			return false;
-		}
-		
-		return true;
-	}
-
-	// ---------------------------------------------------------
-	public boolean processAction2() {
-
-		// Check if the fields are empty
-		if (companionName2.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionName2.requestFocus();
-			return false;
-		}
-
-		else if (startTime2.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			startTime2.requestFocus();
-			return false;
-		} else if (endTime2.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			endTime2.requestFocus();
-			return false;
-		}
-
-		else if (companionHours2.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionHours2.requestFocus();
-			return false;
-		}
-		return true;
-	}
-
-	// ---------------------------------------------------------
-	public boolean processAction3() {
-
-		// Check if the fields are empty
-		if (companionName3.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionName3.requestFocus();
-			return false;
-		}
-
-		else if (startTime3.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			startTime3.requestFocus();
-			return false;
-		} else if (endTime3.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			endTime3.requestFocus();
-			return false;
-		}
-
-		else if (companionHours3.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionHours3.requestFocus();
-			return false;
-		}
-		return true;
-	}
-
-	// ---------------------------------------------------------
-	public boolean processAction4() {
-
-		// Check if the fields are empty
-		if (companionName4.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionName4.requestFocus();
-			return false;
-		}
-
-		else if (startTime4.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			startTime4.requestFocus();
-			return false;
-		} else if (endTime4.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			endTime4.requestFocus();
-			return false;
-		}
-
-		else if (companionHours4.getText().isEmpty()) {
-			statusLog.displayErrorMessage(nullFieldErrorMessage);
-			companionHours4.requestFocus();
-			return false;
-		}
-		return true;
-	}
-	
-	
-	// ----------------------------------------------------------
-	public void setPropertiesObject1() {
-		Properties props = new Properties();
-		Scout s = myScoutCollection.get(0);
-		props.setProperty("sessionID", (String) myModel.getState("SessionID"));
-		props.setProperty("scoutID", (String) s.getState("scoutID"));
-		props.setProperty("companionName", companionName1.getText());
-		props.setProperty("startTime", startTime1.getText());
-		props.setProperty("endTime", endTime1.getText());
-		props.setProperty("companionHours", companionHours1.getText());
-		shiftList.add(props);
-	}
-	
-	// ----------------------------------------------------------
-	public void setPropertiesObject2() {
-		Properties props = new Properties();
-		Scout s = myScoutCollection.get(1);
-		props.setProperty("sessionID", (String) myModel.getState("SessionID"));
-		props.setProperty("scoutID", (String) s.getState("scoutID"));
-		props.setProperty("companionName", companionName2.getText());
-		props.setProperty("startTime", startTime2.getText());
-		props.setProperty("endTime", endTime2.getText());
-		props.setProperty("companionHours", companionHours2.getText());
-		shiftList.add(props);
-	}
-
-	// ----------------------------------------------------------
-	public void setPropertiesObject3() {
-		Properties props = new Properties();
-		Scout s = myScoutCollection.get(2);
-		props.setProperty("sessionID", (String) myModel.getState("SessionID"));
-		props.setProperty("scoutID", (String) s.getState("scoutID"));
-		props.setProperty("companionName", companionName3.getText());
-		props.setProperty("startTime", startTime3.getText());
-		props.setProperty("endTime", endTime3.getText());
-		props.setProperty("companionHours", companionHours3.getText());
-		shiftList.add(props);
-	}
-
-	// ----------------------------------------------------------
-	public void setPropertiesObject4() {
-		Properties props = new Properties();
-		Scout s = myScoutCollection.get(3);
-		props.setProperty("sessionID", (String) myModel.getState("SessionID"));
-		props.setProperty("scoutID", (String) s.getState("scoutID"));
-		props.setProperty("companionName", companionName4.getText());
-		props.setProperty("startTime", startTime4.getText());
-		props.setProperty("endTime", endTime4.getText());
-		props.setProperty("companionHours", companionHours4.getText());
-		shiftList.add(props);
-	}
-	
-	
 	// ----------------------------------------------------------
 	public void displayErrorMessage(String message) {
 		statusLog.displayErrorMessage(message);
 	}
 
-	/**
-	 * Display info message
-	 */
 	// ----------------------------------------------------------
 	public void displayMessage(String message) {
 		statusLog.displayMessage(message);
 	}
 
-	/**
-	 * Clear error message
-	 */
 	// ----------------------------------------------------------
 	public void clearErrorMessage() {
 		statusLog.clearErrorMessage();

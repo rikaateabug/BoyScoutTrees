@@ -7,11 +7,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -33,6 +36,8 @@ import java.awt.Shape;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.Properties;
 
 import javax.swing.text.BadLocationException;
@@ -68,6 +73,9 @@ public class DeleteScoutView extends View {
 	protected final String doneButtonLabel = new String(myResourceBundle.getString("doneButtonLabel"));
 	protected final String submitButtonLabel = new String(myResourceBundle.getString("submitButtonLabel"));
 	protected final String removeSuccessMessage = new String(myResourceBundle.getString("removeSuccessMessage"));
+	protected final String yesLabel = new String(myResourceBundle.getString("yesLabel"));
+	protected final String noLabel = new String(myResourceBundle.getString("noLabel"));
+	protected final String removeConfirmMessage = new String(myResourceBundle.getString("removeConfirmMessage"));
 	
 	protected Text scoutID;
 	protected Text lastName;
@@ -87,7 +95,8 @@ public class DeleteScoutView extends View {
 	protected MessageView statusLog;
 	protected Scout myScout;
 	protected ScoutTransaction myTrans;
-
+	protected Locale myLocale;
+	
 	// constructor for this class -- takes a model object
 	// ----------------------------------------------------------
 	public DeleteScoutView(IModel scoutTrans) {
@@ -95,6 +104,7 @@ public class DeleteScoutView extends View {
 
 		myTrans = (ScoutTransaction) scoutTrans;
 		myScout = (Scout) scoutTrans.getState("Scout");
+		myLocale = (Locale)myModel.getState("Locale");
 		// create a container for showing the contents
 		VBox container = new VBox(10);
 		container.setPadding(new Insets(15, 5, 5, 5));
@@ -113,8 +123,7 @@ public class DeleteScoutView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-		titleText.setWrappingWidth(300);
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		container.getChildren().add(titleText);
@@ -134,7 +143,7 @@ public class DeleteScoutView extends View {
 		grid.setPadding(new Insets(25, 25, 25, 25));
 		// -------------------------------------------------------------
 		Text scoutLabel = new Text(scoutIDLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		scoutLabel.setFont(myFont);
 		scoutLabel.setWrappingWidth(150);
 		scoutLabel.setTextAlignment(TextAlignment.RIGHT);
@@ -235,13 +244,12 @@ public class DeleteScoutView extends View {
 		HBox doneCont = new HBox(20);
 		doneCont.setAlignment(Pos.CENTER);
 		submitButton = new Button(submitButtonLabel);
-		submitButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-
+		submitButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 
 		doneCont.getChildren().add(submitButton);
 
 		doneButton = new Button(doneButtonLabel);
-		doneButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+		doneButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		
 		// -------------------------------------------------------------
 		doneButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -282,10 +290,39 @@ public class DeleteScoutView extends View {
 	// ---------------------------------------------------------
 	public void processAction(Event e) {
 			Properties p = setPropertiesObject();
-			myTrans.stateChangeRequest("DeleteAScout", p);
-			statusLog.displayMessage(removeSuccessMessage);
+			
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setHeaderText(null);
+			alert.setContentText(removeConfirmMessage);
+			
+			ButtonType buttonTypeOne = new ButtonType(yesLabel);
+			ButtonType buttonTypeTwo = new ButtonType(noLabel);
+			
+			alert.getButtonTypes().setAll(buttonTypeOne, buttonTypeTwo);
+			Optional<ButtonType> result = alert.showAndWait();
+			if (result.get() == buttonTypeOne){
+				alert.close();
+				myTrans.stateChangeRequest("DeleteAScout", p);
+				showConfirmationMessage();
+			} else {
+			    alert.close();
+			}
 	}
 
+	// ----------------------------------------------------------
+	public void showConfirmationMessage() {
+	
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setHeaderText(null);
+		alert.setContentText(removeSuccessMessage);
+		alert.showAndWait().ifPresent(response -> {
+			if (response == ButtonType.OK) {
+				alert.close();
+				myModel.stateChangeRequest("CancelAddScout", null);   
+			}
+		});
+	
+	}
 	// ----------------------------------------------------------
 	public Properties setPropertiesObject() {
 		Properties props = new Properties();
@@ -299,7 +336,13 @@ public class DeleteScoutView extends View {
 		props.setProperty("email", (String)myScout.getState("email"));
 		props.setProperty("status", "inactive");
 		
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		DateFormat df;
+		if (myLocale.toString().equals("en_US")) {
+			df = new SimpleDateFormat("MM-dd-yyyy");
+		}
+		else {
+			df = new SimpleDateFormat("dd-MM-yyyy");
+		}
 		Date date = new Date();
 		props.setProperty("dateStatusUpdated", df.format(date));
 		return props;

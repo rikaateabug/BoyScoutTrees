@@ -18,13 +18,16 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -227,7 +230,9 @@ public class ScoutCollectionView extends View {
 		dateCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("dateStatusUpdated"));
 
 		cancelButton = new Button(cancelButtonLabel);
+		cancelButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		submitButton = new Button(submitButtonLabel);
+		submitButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 
 		tableOfScouts.getColumns().addAll(scoutIDCol, firstNameCol, middleNameCol, lastNameCol, dobCol, phoneCol,
 				emailCol, troopIDCol, statusCol, dateCol);
@@ -330,7 +335,9 @@ public class ScoutCollectionView extends View {
 		dateCol.setCellValueFactory(new PropertyValueFactory<ScoutTableModel, String>("dateStatusUpdated"));
 
 		cancelButton = new Button(cancelButtonLabel);
+		cancelButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		submitButton = new Button(submitButtonLabel);
+		submitButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 
 		tableOfScouts.getColumns().addAll(firstNameCol, middleNameCol, lastNameCol, scoutIDCol, dobCol);
 		createActionEventsSession();
@@ -367,6 +374,15 @@ public class ScoutCollectionView extends View {
 				// if there isn't a selection.....
 				if (tableOfScouts.getSelectionModel().getSelectedItem() == null) {
 					System.out.println("select something");
+					Alert alert = new Alert(AlertType.ERROR);
+					alert.setHeaderText(null);
+					alert.setContentText(selectionErrorMessage);
+					
+					alert.showAndWait().ifPresent(response -> {
+							if (response == ButtonType.OK) {
+								alert.close();
+							}
+						});
 				} 
 				else {
 					ScoutTableModel scm = tableOfScouts.getSelectionModel().getSelectedItem();

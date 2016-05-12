@@ -7,7 +7,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -15,6 +17,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -104,7 +107,7 @@ public class UpdateTreeView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setWrappingWidth(300);
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
@@ -125,7 +128,7 @@ public class UpdateTreeView extends View {
 		grid.setPadding(new Insets(25, 25, 25, 0));
 
 		Text accNumLabel = new Text(barcodeLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 15);
 		accNumLabel.setFont(myFont);
 		accNumLabel.setWrappingWidth(150);
 		accNumLabel.setTextAlignment(TextAlignment.RIGHT);
@@ -145,7 +148,18 @@ public class UpdateTreeView extends View {
 		acctTypeLabel.setTextAlignment(TextAlignment.RIGHT);
 		grid.add(acctTypeLabel, 0, 1);
 
-		treeType = new TextField((String) myTree.getState("treeTypeID"));
+
+		String theType = "";
+		try {
+			TreeType myTreeType = new TreeType((String) myTree.getState("treeTypeID"));
+			theType = (String)myTreeType.getState("typeDescription");
+		} catch (InvalidPrimaryKeyException e1) {
+			e1.printStackTrace();
+		}
+		
+		//treeType = new TextField((String) myTree.getState("treeTypeID"));
+		treeType = new TextField(theType);
+		
 		treeType.setEditable(false);
 		treeType.setMouseTransparent(true);
 		treeType.setFocusTraversable(false);
@@ -213,7 +227,7 @@ public class UpdateTreeView extends View {
 				clearErrorMessage();
 				Properties p = setPropertiesObject();
 				myModel.stateChangeRequest("UpdateATree", p);
-				statusLog.displayMessage(updateSuccessMessage);
+				showSuccessMessage();
 			}
 		});
 
@@ -260,6 +274,18 @@ public class UpdateTreeView extends View {
 		return props;
 	}
 
+	public void showSuccessMessage() {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setHeaderText(null);
+		
+		alert.setContentText(updateSuccessMessage);
+		alert.showAndWait().ifPresent(response -> {
+			if (response == ButtonType.OK) {
+				alert.close();
+				myModel.stateChangeRequest("CancelAddScout", null);
+			}
+		});
+	}
 	// -------------------------------------------------------------
 	protected MessageView createStatusLog(String initialMessage) {
 		statusLog = new MessageView(initialMessage);

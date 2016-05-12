@@ -90,7 +90,7 @@ public class SearchTreeBarcodeView extends View {
 		VBox myVbox = new VBox(10);
 		myVbox.setAlignment(Pos.CENTER);
 		Text titleText = new Text(titleTextLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		myVbox.getChildren().add(titleText);
@@ -109,9 +109,9 @@ public class SearchTreeBarcodeView extends View {
 		grid.setHgap(20);
 		grid.setVgap(10);
 		grid.setPadding(new Insets(25, 25, 25, 25));
-
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		Text barcodeT = new Text(barcodeLabel);
-		
+		barcodeT.setFont(myFont);
 		grid.add(barcodeT, 0, 0);
 		
 		barcodeEntry = new TextField();
@@ -121,7 +121,9 @@ public class SearchTreeBarcodeView extends View {
 		HBox buttons = new HBox(20);
 		buttons.setAlignment(Pos.CENTER);
 		submitButton = new Button(submitButtonLabel);
+		submitButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		cancelButton = new Button(cancelButtonLabel);
+		cancelButton.setStyle("-fx-font: 15 arial; -fx-font-weight: bold;");
 		buttons.getChildren().addAll(submitButton, cancelButton);
 		
 		cancelButton.setOnAction(new EventHandler<ActionEvent>() {

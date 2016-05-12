@@ -79,10 +79,13 @@ public class TransactionCollection extends EntityBase implements IView {
 	}
 	
 	// ------------------------------------------------------------------
-	public int getTotalCheckTransactions() {
+	public int getTotalCheckTransactions(String paymentType) {
+		String localizedPaymentMethod = paymentType;
 		int checks = 0;
+		String str;
 		for (Sale s : sales) {
-			if (s.getState("paymentMethod").equals("Check")) {
+			str = (String) s.getState("paymentMethod");
+			if (str.equals(localizedPaymentMethod)) {
 				checks++;
 			}
 		}
@@ -90,13 +93,18 @@ public class TransactionCollection extends EntityBase implements IView {
 	}
 	
 	// ------------------------------------------------------------------
-	public double getEndingCash() {
+	public double getEndingCash(String paymentType) {
+		String localizedPaymentMethod = paymentType;
 		double total = 0;
 		String str;
+		String amt;
 		for (Sale s : sales) {
-			str = (String)s.getState("transactionAmount");
-			System.out.println("str is: " + str);
-			total += Double.valueOf(str);
+			str = (String)s.getState("paymentMethod");
+			if (str.equals(localizedPaymentMethod)) {
+				str = (String)s.getState("transactionAmount");
+				//System.out.println("str is: " + str);
+				total += Double.valueOf(str);
+			}
 		}
 		
 		return total;

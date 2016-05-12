@@ -7,7 +7,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -15,6 +17,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -33,6 +36,7 @@ import java.awt.Shape;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Properties;
 
 import javax.swing.text.BadLocationException;
@@ -62,6 +66,10 @@ public class DeleteTreeView extends View {
 	protected final String notesLabel = new String(myResourceBundle.getString("notesLabel"));
 	protected final String barcodeLabel = new String(myResourceBundle.getString("barcodeLabel"));
 	protected final String removeSuccessMessage = new String(myResourceBundle.getString("removeSuccessMessage"));
+	protected final String removeErrorMessage = new String(myResourceBundle.getString("removeErrorMessage"));
+	protected final String confirmRemoveMessage = new String(myResourceBundle.getString("confirmRemoveMessage"));
+	protected final String yesLabel = new String(myResourceBundle.getString("yesLabel"));
+	protected final String noLabel = new String(myResourceBundle.getString("noLabel"));
 	
 	protected Text barcode;
 	protected Text treeType;
@@ -104,7 +112,7 @@ public class DeleteTreeView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setWrappingWidth(300);
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
@@ -125,7 +133,7 @@ public class DeleteTreeView extends View {
 		grid.setPadding(new Insets(25, 25, 25, 0));
 
 		Text accNumLabel = new Text(barcodeLabel);
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		accNumLabel.setFont(myFont);
 		accNumLabel.setWrappingWidth(150);
 		accNumLabel.setTextAlignment(TextAlignment.RIGHT);
@@ -198,14 +206,37 @@ public class DeleteTreeView extends View {
 
 			@Override
 			public void handle(ActionEvent e) {
-				clearErrorMessage();
+				
+				Alert alert;
 				String theStatus = (String) myTree.getState("status");
-				if (theStatus.equals("Sold")) {
-					statusLog.displayErrorMessage("Error: Sold Trees may not be deleted");
+				
+				if (theStatus.equals("Sold") || theStatus.equals("Vendu")) {
+					alert = new Alert(AlertType.ERROR);
+					alert.setHeaderText(null);
+					alert.setContentText(removeErrorMessage);
+					alert.showAndWait().ifPresent(response -> {
+						if (response == ButtonType.OK) {
+							alert.close();
+						}
+					});
 				}
 				else {
-					myModel.stateChangeRequest("DeleteATree", myTree);
-					statusLog.displayMessage(removeSuccessMessage);
+					alert = new Alert(AlertType.CONFIRMATION);
+					alert.setHeaderText(null);
+					alert.setContentText(confirmRemoveMessage);
+					
+					ButtonType buttonTypeOne = new ButtonType(yesLabel);
+					ButtonType buttonTypeTwo = new ButtonType(noLabel);
+					
+					alert.getButtonTypes().setAll(buttonTypeOne, buttonTypeTwo);
+					Optional<ButtonType> result = alert.showAndWait();
+					if (result.get() == buttonTypeOne){
+						alert.close();
+						myModel.stateChangeRequest("DeleteATree", myTree);
+						showConfirmationMessage();
+					} else {
+					    alert.close();
+					}
 				}
 			}
 		});
@@ -235,6 +266,18 @@ public class DeleteTreeView extends View {
 		return vbox;
 	}
 
+	public void showConfirmationMessage() {
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setHeaderText(null);
+		alert.setContentText(removeSuccessMessage);
+		
+		alert.showAndWait().ifPresent(response -> {
+				if (response == ButtonType.OK) {
+					alert.close();
+					myModel.stateChangeRequest("CancelAddScout", null);
+				}
+			});
+	}
 	// -------------------------------------------------------------
 	protected MessageView createStatusLog(String initialMessage) {
 		statusLog = new MessageView(initialMessage);

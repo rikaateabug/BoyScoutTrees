@@ -130,7 +130,7 @@ public class TreeTypeCollectionView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
 		titleText.setWrappingWidth(300);
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKGREEN);
@@ -187,11 +187,14 @@ public class TreeTypeCollectionView extends View {
 		ScrollPane scrollPane = new ScrollPane();
 		scrollPane.setHbarPolicy(ScrollBarPolicy.ALWAYS);
 		scrollPane.setVbarPolicy(ScrollBarPolicy.ALWAYS);
-		scrollPane.setPrefSize(115, 150);
+		//scrollPane.setPrefSize(115, 150);
+		scrollPane.setPrefSize(300, 300);
 		scrollPane.setContent(tableOfTreeTypes);
 
 		cancelButton = new Button(cancelButtonLabel);
+		cancelButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 		submitButton = new Button(submitButtonLabel);
+		submitButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 		
 		submitButton.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -223,9 +226,10 @@ public class TreeTypeCollectionView extends View {
 		
 		HBox btnContainer = new HBox(30);
 		btnContainer.setAlignment(Pos.CENTER);
-		btnContainer.getChildren().add(cancelButton);
 		btnContainer.getChildren().add(submitButton);
-
+		btnContainer.getChildren().add(cancelButton);
+		
+		
 		vbox.getChildren().add(grid);
 		vbox.getChildren().add(scrollPane);
 		vbox.getChildren().add(btnContainer);

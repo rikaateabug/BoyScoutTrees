@@ -7,7 +7,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -15,6 +17,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -101,8 +104,8 @@ public class AddTreeTypeView extends View {
 		container.setAlignment(Pos.CENTER);
 
 		Text titleText = new Text(titleLabel);
-		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-		titleText.setWrappingWidth(300);
+		titleText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+		//titleText.setWrappingWidth(300);
 		titleText.setTextAlignment(TextAlignment.CENTER);
 		titleText.setFill(Color.DARKOLIVEGREEN);
 		container.getChildren().add(titleText);
@@ -121,7 +124,7 @@ public class AddTreeTypeView extends View {
 		grid.setVgap(10);
 		grid.setPadding(new Insets(25, 25, 10, 0));
 
-		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 12);
+		Font myFont = Font.font("Helvetica", FontWeight.BOLD, 14);
 		
 		Text descLabel = new Text(descriptionLabel);
 		descLabel.setFont(myFont);
@@ -247,9 +250,23 @@ public class AddTreeTypeView extends View {
 				Properties p = new Properties();
 				p = setPropertiesObject();
 				myModel.stateChangeRequest("insertNewTreeType", p);
-				statusLog.displayMessage(addSuccessMessage);
+				showConfirmationMessage();
+				//statusLog.displayMessage(addSuccessMessage);
 			}
 		}
+	}
+	
+	public void showConfirmationMessage() {
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setHeaderText(null);
+		alert.setContentText(addSuccessMessage);
+
+		alert.showAndWait().ifPresent(response -> {
+			if (response == ButtonType.OK) {
+				alert.close();
+				myModel.stateChangeRequest("CancelTrans", null);
+			}
+		});
 	}
 	
 	// ----------------------------------------------------------
